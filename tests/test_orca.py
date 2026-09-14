@@ -9,6 +9,7 @@ from orca.knowledge.database import SQLiteDatabase
 from orca.knowledge.models import AgentResult, EvidenceCard
 from orca.knowledge.retrieval import SQLiteRepository, boundary_proximity, nearest_pfz
 from orca.orchestration.graph import plan, run_graph
+from agents.reporting import synthesize
 
 
 def test_live_empty_retrievals_produce_a_low_confidence_result(monkeypatch) -> None:
@@ -222,6 +223,34 @@ def test_calm_conditions_do_not_produce_saturated_risk() -> None:
     risk = __import__("agents.reporting", fromlist=["_extract_risk_profile"])._extract_risk_profile([card for result in state.results.values() for card in result.evidence])
     assert risk["overall"] < 100
     assert risk["overall"] < 70
+
+
+def test_no_eligible_candidate_uses_explicit_null_selection() -> None:
+    far_pfz = EvidenceCard(type="pfz_bulletin", content="Potential fishing zone: distant sector. High potential.", source="ORCA Demo Fixture", lat=0.0, lon=0.0, raw_ref={"table": "pfz_bulletins", "id": 901, "region_name": "Distant sector PFZ"})
+    result = AgentResult(task_id="pfz", agent="marine_data_discovery", evidence=[far_pfz], summary="PFZ found outside range", confidence=0.9)
+    decision = synthesize({"marine_data_discovery": result}, "Find a nearby fishing area", (22.7, 69.0))
+    brief = decision["mission_brief"]
+    assert brief["selected_candidate"] is None
+    assert brief["eligible_candidates"] == []
+    assert brief["assessment"] == "NO ELIGIBLE OPTION"
+    text = decision["response_text"].lower()
+    assert "strongest nearby" not in text
+    assert "none km" not in text
+    assert "unknown fishing potential" not in text
+    assert "no eligible nearby candidate" in text
+    assert "outside" in text or "useful range" in text
+
+
+def test_no_candidate_with_insufficient_evidence_does_not_claim_a_recommendation() -> None:
+    weather = EvidenceCard(type="weather_alert", content="No severe alert detected.", source="ORCA Demo Fixture", lat=22.7, lon=69.0, raw_ref={"table": "weather_alerts", "id": 902})
+    result = AgentResult(task_id="weather", agent="weather_intelligence", evidence=[weather], summary="Weather checked", confidence=0.8)
+    decision = synthesize({"weather_intelligence": result}, "Find the best nearby fishing area", (22.7, 69.0))
+    brief = decision["mission_brief"]
+    assert brief["selected_candidate"] is None
+    assert brief["assessment"] == "NO ELIGIBLE OPTION"
+    assert "positive recommendation" in decision["response_text"].lower()
+    assert "none" not in decision["response_text"].lower()
+    assert brief["recommendation"] == "No positive recommendation was made."
 
 
 def test_demo_fixture_status_and_coverage_labels() -> None:

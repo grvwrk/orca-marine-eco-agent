@@ -38,6 +38,7 @@ h1 { margin: 0; font: 7.2rem/.8 'Archivo Black', Impact, sans-serif; letter-spac
 .risk-bars i:nth-child(3) { background: var(--sun); }
 .brief-inspection details ul { display: grid; gap: 5px; margin: 8px 0 0; padding: 0; list-style: none; }
 .structured-panel { grid-column: 1 / -1; }
+.shell.no-selection .structured-panel, .shell.no-selection .rationale-panel { display: none; }
 .rationale-panel { grid-column: 1 / -1; box-shadow: 8px 8px 0 var(--coral); }
 .recommendation-hierarchy { display: grid; gap: 5px; padding: 13px; border: 2px solid var(--ink); background: var(--acid); font: 700 12px 'DM Mono', monospace; text-transform: uppercase; }
 .recommendation-hierarchy small { margin-top: 5px; color: var(--ocean); font-size: 10px; }

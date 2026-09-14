@@ -260,6 +260,24 @@ def _decision_explanation(recommended: dict[str, Any], inputs: dict[str, Any], r
     }
 
 
+def _no_candidate_explanation(excluded_candidates: list[dict[str, Any]], inputs: dict[str, Any]) -> dict[str, Any]:
+    reasons = []
+    if excluded_candidates and all(candidate.get("distance_km", 0) > USEFUL_DISTANCE_KM for candidate in excluded_candidates):
+        reasons.append(f"available candidates were outside the {USEFUL_DISTANCE_KM:.0f} km useful range")
+    if not reasons and inputs["evidence_count"] == 0:
+        reasons.append("no usable marine evidence was retrieved")
+    if not reasons and inputs["missing_domains"]:
+        reasons.append("the available evidence did not support an eligible candidate")
+    return {
+        "text": "No eligible nearby candidate was found for the requested location and time. The available candidates did not satisfy the configured spatial/evidence requirements, so ORCA did not make a positive recommendation." if not reasons else "No eligible nearby candidate was found for the requested location and time. ORCA did not make a positive recommendation because " + "; ".join(reasons) + ".",
+        "positive_signals": [],
+        "limitations": reasons,
+        "primary_positive": None,
+        "primary_limitation": reasons[0] if reasons else "No eligible candidate",
+        "primary_risk_driver": None,
+    }
+
+
 def _scenario_groups(risk_profile: dict[str, float], inputs: dict[str, Any]) -> dict[str, list[str]]:
     downgrade = [
         "A severe weather or cyclone warning is issued",
@@ -277,7 +295,9 @@ def _scenario_groups(risk_profile: dict[str, float], inputs: dict[str, Any]) -> 
     return {"downgrade_if": downgrade, "improve_if": improve}
 
 
-def _executive_fallback(recommended: dict[str, Any], explanation: dict[str, Any], assessment: str, scenario_groups: dict[str, list[str]]) -> str:
+def _executive_fallback(recommended: dict[str, Any] | None, explanation: dict[str, Any], assessment: str, scenario_groups: dict[str, list[str]]) -> str:
+    if recommended is None:
+        return explanation["text"]
     change = "worsening weather or sea conditions, or confirmation of a protected-area restriction"
     return (
         f"Recommendation: {recommended['name']}.\n\n"
@@ -295,13 +315,13 @@ def synthesize(results: dict[str, AgentResult], query: str, location: tuple[floa
     eligible_candidates = [candidate for candidate in all_candidates if candidate["eligible"]]
     excluded_candidates = [candidate for candidate in all_candidates if not candidate["eligible"]]
     candidates = eligible_candidates
-    recommended = max(candidates, key=lambda item: item["score"]) if candidates else {"name": "No eligible candidate", "distance_km": None, "fishing_potential": "UNKNOWN", "weather_risk": 0, "sea_state_risk": 0, "boundary_status": "UNKNOWN", "confidence": 0.0, "score": 0}
-    recommendation_signal = "CAUTION" if inputs["risk_score"] >= 35 else "FAVOURABLE" if inputs["opportunity_score"] >= 40 else "MONITOR"
-    safety = "ELEVATED" if inputs["risk_score"] >= 35 else "GOOD"
-    potential = "HIGH" if inputs["opportunity_score"] >= 60 else "MODERATE" if inputs["opportunity_score"] >= 30 else "LOW"
+    recommended = max(candidates, key=lambda item: item["score"]) if candidates else None
+    recommendation_signal = "NO ELIGIBLE OPTION" if recommended is None else "CAUTION" if inputs["risk_score"] >= 35 else "FAVOURABLE" if inputs["opportunity_score"] >= 40 else "MONITOR"
+    safety = "UNKNOWN" if recommended is None else "ELEVATED" if inputs["risk_score"] >= 35 else "GOOD"
+    potential = "UNKNOWN" if recommended is None else "HIGH" if inputs["opportunity_score"] >= 60 else "MODERATE" if inputs["opportunity_score"] >= 30 else "LOW"
     confidence = min((result.confidence for result in results.values()), default=0.0) * (len(inputs["available_domains"]) / inputs["total_domains"])
     primary_driver = "weather" if risk_profile["weather"] >= max(risk_profile["waves"], risk_profile["wind"], risk_profile["current"], risk_profile["tide"], risk_profile["boundary"]) else "sea_state" if risk_profile["waves"] >= max(risk_profile["wind"], risk_profile["current"], risk_profile["tide"], risk_profile["boundary"]) else "boundary" if risk_profile["boundary"] >= max(risk_profile["wind"], risk_profile["current"], risk_profile["tide"]) else "ocean_state"
-    explanation = _decision_explanation(recommended, inputs, risk_profile, recommendation_signal)
+    explanation = _decision_explanation(recommended, inputs, risk_profile, recommendation_signal) if recommended is not None else _no_candidate_explanation(excluded_candidates, inputs)
     scenario_groups = _scenario_groups(risk_profile, inputs)
 
     response_context = {
@@ -319,6 +339,8 @@ def synthesize(results: dict[str, AgentResult], query: str, location: tuple[floa
     }
     prompt = "You are Orca's reporting agent. Produce the executive answer for a marine mission from the structured evidence below. Return no headings, tables, lists, raw references, agent names, scores, or database terms. Use two short paragraphs: state the recommendation and best option, explain the positive tradeoff and the primary limitation, then state what would change the decision. Use only supplied evidence and be natural and concise.\n" + json.dumps(response_context, default=str)
     response_text = complete(prompt, lambda: _executive_fallback(recommended, explanation, recommendation_signal, scenario_groups))
+    if recommended is None and any(token in response_text.lower() for token in ("none km", "none", "strongest nearby", "fishing potential", "sea conditions")):
+        response_text = _executive_fallback(None, explanation, recommendation_signal, scenario_groups)
     technical_response = render(results, results.get("risk_assessment").summary if results.get("risk_assessment") else None, query=query, location=location)
 
     provenance = "DEMO FIXTURE" if any("demo fixture" in (card.source or "").lower() or "demo" in (card.source or "").lower() for card in evidence) else "HISTORICAL"
@@ -331,7 +353,7 @@ def synthesize(results: dict[str, AgentResult], query: str, location: tuple[floa
             "assessment": recommendation_signal,
             "fishing_potential": potential,
             "operational_safety": safety,
-            "recommendation": f"Prioritise {recommended['name']} while monitoring weather and protected-area exposure.",
+            "recommendation": f"Prioritise {recommended['name']} while monitoring weather and protected-area exposure." if recommended else "No positive recommendation was made.",
             "confidence": confidence,
             "provenance": provenance,
             "provider_verification": "NOT LIVE VERIFIED",
@@ -352,11 +374,11 @@ def synthesize(results: dict[str, AgentResult], query: str, location: tuple[floa
             "primary_risk_driver": explanation["primary_risk_driver"],
             "scenario_groups": scenario_groups,
             "decision_balance": {
-                "fishing_potential": recommended.get("fishing_potential", "UNKNOWN"),
+                "fishing_potential": recommended.get("fishing_potential", "UNKNOWN") if recommended else "UNKNOWN",
                 "weather_risk": risk_profile["weather"],
                 "sea_state_risk": max(risk_profile["waves"], risk_profile["wind"], risk_profile["current"], risk_profile["tide"]),
                 "boundary_confidence": "INCOMPLETE" if explanation["primary_limitation"] == "protected-area evidence is incomplete" else "ASSESSED",
-                "distance_km": recommended.get("distance_km"),
+                "distance_km": recommended.get("distance_km") if recommended else None,
             },
             "executive_answer": response_text,
             "technical_detail": technical_response,
@@ -391,9 +413,9 @@ def render(results: dict[str, AgentResult], verdict: str | None = None, query: s
     all_candidates = _candidate_cards(evidence, location or (15.1, 73.75))
     candidates = [candidate for candidate in all_candidates if candidate["eligible"]]
     excluded_candidates = [candidate for candidate in all_candidates if not candidate["eligible"]]
-    recommended = max(candidates, key=lambda item: item["score"]) if candidates else {"name": "No eligible candidate", "distance_km": None, "fishing_potential": "UNKNOWN"}
-    assessment = "CAUTION" if inputs["risk_score"] >= 35 else "FAVOURABLE" if inputs["opportunity_score"] >= 40 else "MONITOR"
-    explanation = _decision_explanation(recommended, inputs, inputs["risk_profile"], assessment)
+    recommended = max(candidates, key=lambda item: item["score"]) if candidates else None
+    assessment = "NO ELIGIBLE OPTION" if recommended is None else "CAUTION" if inputs["risk_score"] >= 35 else "FAVOURABLE" if inputs["opportunity_score"] >= 40 else "MONITOR"
+    explanation = _decision_explanation(recommended, inputs, inputs["risk_profile"], assessment) if recommended is not None else _no_candidate_explanation(excluded_candidates, inputs)
     area = ""
     if query:
         normalized = re.sub(r"[^a-zA-Z]", " ", query.lower()).split()
@@ -418,7 +440,7 @@ def render(results: dict[str, AgentResult], verdict: str | None = None, query: s
         f"{area or 'Regional'} candidate comparison.",
         "CANDIDATES",
         *candidate_lines,
-        f"CURRENT RECOMMENDATION: {verdict or 'CAUTION'}.",
+        f"CURRENT RECOMMENDATION: {verdict or assessment}.",
         "DECISION RATIONALE",
         explanation["text"],
         "WHY NOT FAVOURABLE?" if assessment == "CAUTION" else "WHY THIS IS FAVOURABLE",

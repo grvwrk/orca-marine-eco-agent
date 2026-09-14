@@ -238,7 +238,7 @@ export default function Home() {
   }
 
   return (
-    <main className="shell">
+    <main className={`shell ${missionBrief?.selected_candidate ? '' : missionBrief?.assessment === 'NO ELIGIBLE OPTION' ? 'no-selection' : ''}`}>
       <div className="topline"><strong>ORCA // MARINE INTELLIGENCE</strong><span>SIH26176 / FIELD CONSOLE</span><span className="service"><span className="mode-badge" style={{ background: modeStyle.color }} data-mode={modeStyle.label}>{modeStyle.label}</span><i className={`status-dot ${status === 'online' ? 'ready' : ''}`} /> SERVICE {status.toUpperCase()} / DB {database.toUpperCase()}</span></div>
 
       <header className="hero">
