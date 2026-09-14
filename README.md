@@ -1,40 +1,25 @@
-# Orca Marine Intelligence
+# ORCA — Marine Intelligence API
 
-> **Current implementation note:** ORCA is SQLite-first for local execution. The verified default path uses `data/orca.sqlite3`, normalized demonstration fixtures, specialist agents, deterministic grounding calculations, and a reporting/synthesis layer that produces a concise executive answer plus structured inspection data. PostGIS and live ingestion are optional paths and must not be described as active provider verification unless configured and independently checked.
+Evidence-grounded marine intelligence for coastal and fishing operations. ORCA combines potential fishing zone (PFZ) advisories, weather hazards, ocean-state forecasts, satellite readings, and maritime boundaries into a single traceable answer, instead of requiring users to cross-check multiple government data sources manually. Built for SIH problem statement 26176.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the complete component, data-flow, decision-object, API, frontend, provenance, and verification specification. See [DATA_PROVENANCE_AND_INGESTION.txt](DATA_PROVENANCE_AND_INGESTION.txt) for the data reality and ingestion limitations.
+Full technical specification: [ARCHITECTURE.md](ARCHITECTURE.md). Data status and ingestion limitations: [DATA_PROVENANCE_AND_INGESTION.txt](DATA_PROVENANCE_AND_INGESTION.txt).
 
-Orca is an evidence-grounded marine intelligence API for the SIH26176 disaster-management brief. It combines potential fishing zone advisories, weather hazards, ocean-state forecasts, satellite readings, and maritime boundaries into traceable answers for fishing and coastal operations.
+## Data status
 
-The project has two primary data modes:
-
-- **Local SQLite mode** is the default no-Docker path. It reads `data/orca.sqlite3`, which contains normalized demonstration records and can receive historical imports.
-- **PostGIS/live mode** is optional. It reads normalized records from PostGIS or configured machine-readable feeds when the necessary database, network, endpoint, and credentials are available.
-
-The reasoning pipeline is:
-
-```text
-user query -> planner/mission intent -> specialist agents -> retrieval
--> deterministic grounding -> shared decision -> reporting/synthesis
--> Mission Brief and executive answer
-```
-
-Demo data may be deterministic. Final recommendation logic is not a demo-only query rule.
-
-The public portal URLs are catalogued for provenance, but portal HTML pages are not treated as data feeds. A live ingestion job needs the provider's actual API, JSON, GeoJSON, or export URL.
+ORCA runs locally on a SQLite evidence store populated with normalized historical demonstration fixtures. Retrieval, evidence, mapping, confidence scoring, and multi-agent reasoning are fully functional against this data. PostGIS and live provider ingestion (INCOIS, IMD, MOSDAC, WDPA, Marine Regions) are implemented but optional, and require configured credentials, network access, and independent verification before their output can be described as live. The API reports its current state via `mission_brief.provenance` and `mission_brief.provider_verification` on every response — treat those fields as authoritative, not the provider name alone.
 
 ## Architecture
 
 ```mermaid
 flowchart TD
 	Client[Web client or API consumer] --> API[FastAPI /chat]
-	API --> Session[SessionStore\nlocation and response cache]
+	API --> Session[SessionStore: location and response cache]
 	API --> Planner[Query planner]
-	Planner --> Graph[LangGraph workflow\nor deterministic fallback]
+	Planner --> Graph[LangGraph workflow or deterministic fallback]
 	Graph --> Agents[Specialist agents]
 	Agents --> Retrieval[Knowledge retrieval]
 	Retrieval --> Repo{Repository selection}
-	Repo --> Demo[DemoRepository\nseeded evidence]
+	Repo --> Demo[DemoRepository: seeded evidence]
 	Repo --> PostGIS[PostGISRepository]
 	PostGIS --> Tables[(PostGIS tables)]
 	Graph --> Report[Reporting and map response]
@@ -45,118 +30,101 @@ flowchart TD
 
 ### Request flow
 
-1. `POST /chat` validates the session, message, and optional latitude/longitude.
-2. The session store reuses the last known location and returns cached responses when the normalized message and location match.
-3. The planner selects specialist tasks from query terms such as `PFZ`, `weather`, `wave`, `chlorophyll`, `boundary`, `safe`, or `route`.
-4. LangGraph runs the planning, specialist, risk, and reporting nodes in sequence. Set `ORCA_USE_LANGGRAPH=0` to use the compatible deterministic runner; both paths use the same agent and retrieval boundaries.
-5. Each specialist calls the retrieval contract. Configured PFZ, IMD, OSF, and satellite feeds are queried first with a short in-memory cache. Empty or failed feed reads fall back to PostGIS, then to seeded data when `ORCA_DEMO_MODE=1`.
-6. The reporting layer builds one shared decision object containing the resolved location, eligible/excluded candidates, selected candidate, recommendation, confidence, risk decomposition, rationale, scenarios, coverage, provenance, and lineage.
-7. The response contains a concise executive `response_text`; technical evidence, raw references, specialist trace, map data, coverage, risk details, and lineage remain structured fields for secondary inspection.
-
-8. Empty live tables are valid: agents return an explicit no-data result with zero confidence instead of fabricating evidence or crashing.
+1. `POST /chat` validates the session, message, and optional coordinates.
+2. The session store reuses the last known location and returns a cached response when the normalized message and location match a prior query.
+3. The planner selects specialist tasks from query terms (`PFZ`, `weather`, `wave`, `chlorophyll`, `boundary`, `safe`, `route`, etc.).
+4. LangGraph runs the planning, specialist, risk, and reporting nodes in sequence (`ORCA_USE_LANGGRAPH=0` switches to a deterministic runner using the same agent and retrieval contracts).
+5. Each specialist queries configured live feeds first (short in-memory cache), falling back to PostGIS, then to seeded SQLite data when `ORCA_DEMO_MODE=1`.
+6. The reporting layer assembles one shared decision object: resolved location, eligible/excluded candidates, recommendation, confidence, risk decomposition, rationale, scenarios, coverage, and provenance.
+7. The response returns a concise executive `response_text`, with full evidence, specialist trace, map data, and lineage available as structured fields for inspection.
+8. Empty live tables are a valid outcome — agents return an explicit no-data, zero-confidence result rather than fabricating or crashing.
 
 ### Specialist agents
 
-| Agent | Responsibility | Main data |
+| Agent | Responsibility | Data |
 | --- | --- | --- |
-| `marine_data_discovery` | Find nearby PFZ advisories | `pfz_bulletins` |
-| `weather_intelligence` | Find active alerts in the requested area and time window | `weather_alerts` |
-| `ocean_analytics` | Retrieve waves, wind, currents, tides, or satellite trends | `ocean_state_forecast`, `satellite_readings` |
-| `geospatial_reasoning` | Check PFZ proximity, MPA/EEZ boundaries, and route points | `pfz_bulletins`, `boundary_geometries` |
-| `risk_assessment` | Combine available evidence into a caution or insufficient-evidence verdict | Previous agent results |
-| `reporting` | Render the final answer and map payload | Previous agent results |
+| `marine_data_discovery` | Nearby PFZ advisories | `pfz_bulletins` |
+| `weather_intelligence` | Active alerts in the requested area and time window | `weather_alerts` |
+| `ocean_analytics` | Waves, wind, currents, tides, satellite trends | `ocean_state_forecast`, `satellite_readings` |
+| `geospatial_reasoning` | PFZ proximity, MPA/EEZ boundaries, route points | `pfz_bulletins`, `boundary_geometries` |
+| `risk_assessment` | Combines evidence into a caution or insufficient-evidence verdict | Previous agent results |
+| `reporting` | Renders the final answer and map payload | Previous agent results |
 
-### Data model
+### Data model (`db/schema.sql`)
 
-The schema in `db/schema.sql` creates:
-
-- `pfz_bulletins`: INCOIS PFZ geometry and advisory metadata.
-- `weather_alerts`: IMD-style alert geometry, severity, validity, and description.
-- `ocean_state_forecast`: point forecasts for waves, wind, currents, and tides.
-- `satellite_readings`: point observations such as chlorophyll and SST.
-- `boundary_geometries`: EEZ, MPA, and other geofencing geometries with JSON metadata.
-- `evidence_cards`: reserved persistence structure for traceable response evidence.
+- `pfz_bulletins` — INCOIS PFZ geometry and advisory metadata
+- `weather_alerts` — IMD-style alert geometry, severity, validity window, description
+- `ocean_state_forecast` — wave, wind, current, and tide point forecasts
+- `satellite_readings` — point observations (chlorophyll, SST)
+- `boundary_geometries` — EEZ, MPA, and other geofencing geometry with JSON metadata
+- `evidence_cards` — reserved persistence structure for traceable response evidence
 
 Spatial queries use PostGIS geography/geometry indexes for nearest-neighbour, intersection, and distance operations.
 
-## Run locally without Docker
+## Quick start (local, no Docker)
 
 ```powershell
 python -m pip install -e ".[dev]"
 $env:ORCA_DEMO_MODE = "1"
-$env:ORCA_DATABASE_URL = ""
 $env:PYTHONPATH = "src;."
 python -m uvicorn orca.api.main:app --reload
 ```
 
-This starts Orca in offline demo mode with seeded marine evidence. It does not require Docker, PostgreSQL, PostGIS, or external data feeds. Open `http://127.0.0.1:8000/docs` or call:
+This runs ORCA in offline demo mode with seeded evidence — no Docker, PostgreSQL, PostGIS, or external feeds required. API docs: `http://127.0.0.1:8000/docs`. Runtime status: `http://127.0.0.1:8000/health`.
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8000/chat -Method Post -ContentType 'application/json' -Body '{"session_id":"demo","message":"Where is the nearest potential fishing zone today?"}'
+Invoke-RestMethod http://127.0.0.1:8000/chat -Method Post -ContentType 'application/json' `
+  -Body '{"session_id":"demo","message":"Where is the nearest potential fishing zone today?"}'
 ```
 
-Run the checks with:
+Run tests before changing adapters, orchestration, or retrieval contracts:
 
 ```powershell
 python -m pytest
 ```
 
-Check runtime status at `http://127.0.0.1:8000/health`.
+### Persistent local data (SQLite)
 
-### Local SQLite archive
-
-The current checked-in local database contains 72 normalized demonstration
-records: 9 PFZ, 9 weather, 27 ocean, 18 satellite, and 9 boundary records.
-They exercise the real retrieval and decision pipeline but are not verified
-live provider observations. The API labels this state `DEMO FIXTURE` and
-`NOT LIVE VERIFIED`.
-
-For persistent local data without Docker, initialize and use the SQLite backend:
+The checked-in database contains 72 normalized demonstration records (9 PFZ, 9 weather, 27 ocean, 18 satellite, 9 boundary). These exercise the real retrieval and decision pipeline but are not verified live provider observations — the API labels this state `DEMO FIXTURE` / `NOT LIVE VERIFIED`.
 
 ```powershell
 $env:ORCA_USE_SQLITE = "1"
 $env:ORCA_SQLITE_PATH = "data/orca.sqlite3"
 $env:ORCA_DEMO_MODE = "0"
-$env:ORCA_DATABASE_URL = ""
 $env:PYTHONPATH = "src;."
 python -m uvicorn orca.api.main:app --reload
 ```
 
-Import real normalized historical JSON/GeoJSON archives for the Arabian Sea. Files are selected by prefix: `pfz*.json`, `weather*.json`, `ocean*.json`, `satellite*.json`, and `boundary*.json`.
+Import normalized historical JSON/GeoJSON archives (files selected by prefix: `pfz*.json`, `weather*.json`, `ocean*.json`, `satellite*.json`, `boundary*.json`):
 
 ```powershell
-python -m ingestion.import_historic_sqlite `
-	--input-dir data/arabian-sea `
-	--db-path data/orca.sqlite3 `
-	--start 2005-01-01
+python -m ingestion.import_historic_sqlite --input-dir data/arabian-sea --db-path data/orca.sqlite3 --start 2005-01-01
 ```
 
-The importer defaults to `2005-01-01` through today, preserves source URLs and raw geometry, and rejects records outside the requested date window. The archive format is intentionally normalized so provider-specific downloads can be validated before loading.
+The importer preserves source URLs and raw geometry, and rejects records outside the requested date window.
 
-## Frontend console
+## Frontend
 
-The operational console is a Next.js app in `frontend/`. Start it separately while the API is running:
+A Next.js operational console lives in `frontend/`:
 
 ```powershell
-Set-Location frontend
+cd frontend
 npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:3000`. The console checks `/health`, sends questions to `/chat`, preserves a browser session, accepts manual or browser coordinates, and renders confidence plus evidence cards. It uses a maximalist solid-color visual system with no gradients. By default it calls `http://127.0.0.1:8000`; set `NEXT_PUBLIC_ORCA_API_URL` before `npm run dev` when the API runs elsewhere.
+Open `http://127.0.0.1:3000`. It checks `/health`, sends queries to `/chat`, preserves a browser session, accepts manual or browser-geolocated coordinates, and renders confidence and evidence cards. Set `NEXT_PUBLIC_ORCA_API_URL` before `npm run dev` if the API runs somewhere other than `http://127.0.0.1:8000`.
 
-## Optional live stack
+## Optional live stack (PostGIS)
 
-Use this only when you need persistent ingested data or spatial queries against live feeds. Install the application and live dependencies, then start PostgreSQL/PostGIS with Docker:
+Only needed for persistent ingested data or spatial queries against live feeds:
 
 ```powershell
 python -m pip install -e ".[dev,live]"
 docker compose up -d --build
 ```
 
-The API container uses `ORCA_DEMO_MODE=0`, so it reads PostGIS and does not fabricate missing live data. The database is reachable by the app internally as `db:5432`; PostgreSQL is intentionally not published to the host by default. The API is available at `http://127.0.0.1:8000`.
-
-Useful operational commands:
+`ORCA_DEMO_MODE=0` in the API container means it reads PostGIS directly and does not fabricate missing live data. PostgreSQL is reachable internally as `db:5432` and is not published to the host by default.
 
 ```powershell
 docker compose ps
@@ -167,32 +135,29 @@ docker compose down
 
 ## Configuration
 
-Copy `.env.example` to `.env` for local reference. Compose reads the values from the environment; it does not automatically load `.env` into the `app` service unless the variables are declared in the Compose file or exported in the shell.
+Copy `.env.example` to `.env` for reference — Compose does not load `.env` into the `app` service automatically unless the variables are declared in the Compose file or exported in the shell.
 
 | Variable | Purpose |
 | --- | --- |
-| `ORCA_DATABASE_URL` | PostgreSQL/PostGIS connection string. |
-| `ORCA_DEMO_MODE` | Set `1` for seeded offline retrieval; set `0` for live PostGIS. |
-| `ORCA_USE_LANGGRAPH` | Set `1` for LangGraph; set `0` for the deterministic fallback. |
-| `ORCA_REQUEST_TIMEOUT` | HTTP timeout used by ingestion requests, in seconds. |
-| `ORCA_FEED_CACHE_TTL` | Seconds to reuse a successful live feed response in the API process. |
-| `ORCA_PFZ_FEED_URL` | Machine-readable PFZ feed used by the source dispatcher. |
-| `ORCA_IMD_API_URL` | Selected IMD API or normalized alert feed endpoint. |
-| `ORCA_IMD_API_KEY` | Optional IMD credential reserved for an authenticated adapter. |
-| `ORCA_OSF_FEED_URL` | Machine-readable INCOIS OSF feed. |
-| `ORCA_SATELLITE_FEED_URL` | Machine-readable MOSDAC/Oceansat reading feed. |
-| `ORCA_MOSDAC_TOKEN` | Optional MOSDAC credential reserved for an authenticated adapter. |
-| `ORCA_BOUNDARIES_FEED_URL` | EEZ/MPA GeoJSON export feed. |
-| `ORCA_WDPA_TOKEN` | Optional Protected Planet/WDPA credential reserved for an authenticated adapter. |
-| `GROQ_API_KEY`, `GROQ_MODEL` | Optional LLM settings; `/health` reports Groq only when the key is present. |
+| `ORCA_DATABASE_URL` | PostgreSQL/PostGIS connection string |
+| `ORCA_DEMO_MODE` | `1` for seeded offline retrieval, `0` for live PostGIS |
+| `ORCA_USE_LANGGRAPH` | `1` for LangGraph, `0` for the deterministic fallback |
+| `ORCA_REQUEST_TIMEOUT` | Ingestion HTTP timeout (seconds) |
+| `ORCA_FEED_CACHE_TTL` | Seconds to reuse a successful live feed response |
+| `ORCA_PFZ_FEED_URL` | Machine-readable PFZ feed |
+| `ORCA_IMD_API_URL` / `ORCA_IMD_API_KEY` | IMD API endpoint / credential |
+| `ORCA_OSF_FEED_URL` | INCOIS ocean state forecast feed |
+| `ORCA_SATELLITE_FEED_URL` / `ORCA_MOSDAC_TOKEN` | MOSDAC/Oceansat feed / credential |
+| `ORCA_BOUNDARIES_FEED_URL` / `ORCA_WDPA_TOKEN` | EEZ/MPA GeoJSON feed / credential |
+| `GROQ_API_KEY`, `GROQ_MODEL` | Optional LLM settings; `/health` reports Groq only when the key is present |
 
-Configured IMD and MOSDAC tokens are sent as `Authorization: Bearer ...` headers by the live feed repository. Provider-specific authentication schemes may differ, so use a normalized authenticated endpoint when the upstream service does not accept bearer tokens. The generic ingestion commands remain intentionally provider-neutral.
+Configured IMD and MOSDAC tokens are sent as `Authorization: Bearer ...` headers. If a provider doesn't accept bearer tokens, use a normalized authenticated endpoint in front of it — the generic ingestion commands are intentionally provider-neutral.
 
-## Ingestion pipeline
+## Ingestion
 
-The source registry is in `ingestion/source_catalog.py`. It records the public source page, the normalized adapter, the feed environment variable, and licensing/access notes. The adapters are intentionally small and separate from orchestration:
+The source registry (`ingestion/source_catalog.py`) records each provider's public source page, normalized adapter, feed environment variable, and licensing/access notes.
 
-| Command adapter | Normalized table |
+| Command adapter | Table |
 | --- | --- |
 | `pfz` | `pfz_bulletins` |
 | `weather` | `weather_alerts` |
@@ -200,74 +165,54 @@ The source registry is in `ingestion/source_catalog.py`. It records the public s
 | `satellite` | `satellite_readings` |
 | `boundaries` | `boundary_geometries` |
 
-Load a feed directly:
-
 ```powershell
 python -m ingestion.ingest_pfz https://your-feed.example/pfz.geojson --database-url $env:ORCA_DATABASE_URL
-python -m ingestion.ingest_weather https://your-feed.example/alerts.geojson --database-url $env:ORCA_DATABASE_URL
-```
-
-Or use the source dispatcher. `--url` overrides configuration; without it, the dispatcher uses the source's configured `ORCA_*_FEED_URL` value:
-
-```powershell
-python -m ingestion.ingest_source pfz_advisory --database-url $env:ORCA_DATABASE_URL
 python -m ingestion.ingest_source imd_api --database-url $env:ORCA_DATABASE_URL
-python -m ingestion.ingest_source incois_osf --database-url $env:ORCA_DATABASE_URL
-python -m ingestion.ingest_source oceansat_open_data --database-url $env:ORCA_DATABASE_URL
 ```
 
-PFZ, OSF, MOSDAC, IMD, Marine Regions, and WDPA portal pages are not themselves feed URLs. GEBCO is gridded raster data and needs a separate raster pipeline. WDPA data is suitable for a hackathon/academic demo but has commercial-use restrictions.
-
-Each feed must match the fields expected by its normalizer. The current adapters accept JSON/GeoJSON and do not scrape interactive portals.
+`--url` overrides configuration; without it, the dispatcher uses the source's configured `ORCA_*_FEED_URL`. Adapters accept normalized JSON/GeoJSON only — public provider portal pages (INCOIS, IMD, MOSDAC, Marine Regions, WDPA) are not feed URLs and are not scraped. GEBCO bathymetry is gridded raster data requiring a separate pipeline. WDPA data is suitable for a hackathon/academic demo but carries commercial-use restrictions.
 
 ## API contract
 
-### `GET /health`
+**`GET /health`** — service status, data status (`demo`, `api-only`, `ok`, `degraded`), LLM status.
 
-Returns service status, data status (`demo`, `api-only`, `ok`, or `degraded`), and the selected LLM status.
-
-### `POST /chat`
-
-Request:
+**`POST /chat`**
 
 ```json
 {
-	"session_id": "demo",
-	"message": "Where is the nearest potential fishing zone today?",
-	"lat": 15.10,
-	"lon": 73.75
+  "session_id": "demo",
+  "message": "Where is the nearest potential fishing zone today?",
+  "lat": 15.10,
+  "lon": 73.75
 }
 ```
 
-`lat` and `lon` are optional. A session's last location is reused when they are omitted; otherwise the default demo location is used.
+`lat`/`lon` are optional — a session's last location is reused when omitted, otherwise a default demo location is used.
 
-Response fields include:
+Response fields:
 
-- `response_text`: concise executive answer for the Signal Interpretation panel;
-- `mission_brief`: recommendation, assessment, fishing potential, operational safety, confidence, selected candidate, eligible/excluded candidates, decision rationale, primary limitation/risk, scenarios, boundary status, and provenance;
-- `resolved_location`: authoritative place/coordinate resolution used downstream;
-- `risk_decomposition`: overall/component risk values, primary driver, semantics, and evidence-derived reasons;
-- `evidence_coverage`: available and missing domains plus confidence limitation context;
-- `evidence`: deduplicated source records with coordinates, validity times, distances, and `raw_ref` identities;
-- `agent_trace`: task-specific specialist contributions;
-- `lineage`: processing stages from user query through synthesis;
-- `map_data`: GeoJSON features for the query/evidence map.
+| Field | Contents |
+| --- | --- |
+| `response_text` | Concise executive answer |
+| `mission_brief` | Recommendation, confidence, risk, rationale, scenarios, boundary status, provenance |
+| `resolved_location` | Authoritative coordinate resolution used downstream |
+| `risk_decomposition` | Component risk values, primary driver, evidence-derived reasons |
+| `evidence_coverage` | Available/missing domains, confidence limitations |
+| `evidence` | Deduplicated source records with coordinates, validity, distance, `raw_ref` |
+| `agent_trace` | Per-specialist contributions |
+| `lineage` | Processing stages from query to synthesis |
+| `map_data` | GeoJSON features for the query/evidence map |
 
-Evidence cards carry a type, content, source, validity time, and `raw_ref` pointing back to a database table or generated record. Provider names do not imply live verification; inspect `mission_brief.provenance` and `mission_brief.provider_verification`.
-
-Example:
+Provider names in evidence do not imply live verification — check `mission_brief.provenance` and `mission_brief.provider_verification`.
 
 ```powershell
 $body = '{"session_id":"demo","message":"What are the wave and weather conditions?","lat":15.10,"lon":73.75}'
 Invoke-RestMethod http://127.0.0.1:8000/chat -Method Post -ContentType 'application/json' -Body $body | ConvertTo-Json -Depth 8
 ```
 
-## Limitations and next steps
+## Known limitations
 
-- Provider-specific authentication headers and response schemas still need dedicated adapters; the generic loaders require normalized JSON/GeoJSON.
-- The live repository expects normalized JSON/GeoJSON fields; provider-specific response mapping still belongs in dedicated adapters.
+- Provider-specific authentication and response schemas still need dedicated adapters beyond the generic normalized loaders.
 - GEBCO bathymetry needs a raster ingestion and tile/query path.
-- Exact India-Sri Lanka IMBL geometry is not bundled; Marine Regions EEZ boundaries are the current demo substitute.
-- The frontend is a static operational console; the API remains the primary validated interface.
-
-Run `python -m pytest` before changing adapters, orchestration, or retrieval contracts.
+- Exact India–Sri Lanka IMBL geometry is not bundled; Marine Regions EEZ boundaries are the current substitute.
+- The frontend is a console for the API, not an independent source of truth — the API is the primary validated interface.
