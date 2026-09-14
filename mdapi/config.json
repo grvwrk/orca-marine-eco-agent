@@ -1,0 +1,23 @@
+{
+"user_credentials": {
+        "username/email": "grvwrk",
+        "password": "Hatta@123"
+},
+
+"search_parameters": {
+        "datasetId": "E06OCM_L4_AC",
+        "startTime": "2026-07-01",
+        "endTime": "2026-09-15",
+        "count": "",
+        "boundingBox": "",
+        "gId": ""
+},
+
+"download_settings": {
+        "download_path" : "../data/mosdac",
+        "organize_by_date": false,
+        "skip_user_input": false,
+        "generate_error_logs": true,
+        "error_logs_dir": ""
+}
+} 

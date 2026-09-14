@@ -1,0 +1,10 @@
+15-09-2026 02:44:48 - ERROR - [ERROR] Invalid Token Error encountered. Please Login Successfully and Try Again.
+Error Details: 
+Traceback (most recent call last):
+  File "C:\sih\mdapi\mdapi.py", line 676, in refresh_access_token
+    response.raise_for_status()
+  File "C:\Users\Gourav Sahu\AppData\Local\Programs\Python\Python311\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 429 Client Error: TOO MANY REQUESTS for url: https://mosdac.gov.in/download_api/refresh-token
+15-09-2026 02:44:48 - ERROR - 
+There was an Error encountered to Refresh Access Token due to Invalid Refresh Token provided, and hence, Download cannot proceed.
