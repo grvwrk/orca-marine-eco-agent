@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: orca
+      POSTGRES_USER: orca
+      POSTGRES_PASSWORD: orca
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+
+  app:
+    build: .
+    environment:
+      ORCA_DATABASE_URL: postgresql://orca:orca@db:5432/orca
+      ORCA_DEMO_MODE: "0"
+      ORCA_USE_LANGGRAPH: ${ORCA_USE_LANGGRAPH:-1}
+      ORCA_REQUEST_TIMEOUT: ${ORCA_REQUEST_TIMEOUT:-15}
+      ORCA_FEED_CACHE_TTL: ${ORCA_FEED_CACHE_TTL:-60}
+      ORCA_PFZ_FEED_URL: ${ORCA_PFZ_FEED_URL:-}
+      ORCA_IMD_API_URL: ${ORCA_IMD_API_URL:-}
+      ORCA_IMD_API_KEY: ${ORCA_IMD_API_KEY:-}
+      ORCA_OSF_FEED_URL: ${ORCA_OSF_FEED_URL:-}
+      ORCA_SATELLITE_FEED_URL: ${ORCA_SATELLITE_FEED_URL:-}
+      ORCA_MOSDAC_TOKEN: ${ORCA_MOSDAC_TOKEN:-}
+      ORCA_BOUNDARIES_FEED_URL: ${ORCA_BOUNDARIES_FEED_URL:-}
+      ORCA_WDPA_TOKEN: ${ORCA_WDPA_TOKEN:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.1-8b-instant}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

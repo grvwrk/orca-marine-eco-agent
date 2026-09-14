@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orca-marine-reasoning"
+version = "0.1.0"
+description = "Evidence-grounded marine ecosystem reasoning"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "requests>=2.32",
+    "uvicorn[standard]>=0.30",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "httpx>=0.27"]
+live = ["psycopg[binary]>=3.2", "beautifulsoup4>=4.12"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -1,0 +1,252 @@
+ORCA MARINE INTELLIGENCE PROJECT
+
+Overview
+This project is a marine intelligence and decision-support system for coastal and offshore operations. It combines marine data retrieval, geospatial reasoning, risk assessment, and conversational reporting into a single local application that can run without Docker in a lightweight SQLite mode.
+
+The system is designed to help users ask operational questions such as:
+- Where is the nearest PFZ advisory?
+- Are there lightning or cyclone alerts in my area?
+- What are the current sea conditions, tides, and wind near my fishing zone?
+- Which boundaries or protected zones should I avoid?
+- What is the safest route or operational advisory for my vessel?
+
+Core Features
+
+1. Local no-Docker execution
+The application can run directly on a developer machine without requiring Docker or a PostgreSQL/PostGIS instance.
+
+Key setup:
+- SQLite backend is enabled via environment variables
+- Local database is stored under data/orca.sqlite3
+- Demo fallback data is available when no archive is imported
+- PostgreSQL/PostGIS remains optional for larger or production-grade deployments
+
+2. SQLite-first local backend
+The project supports a portable SQLite database for local development and historical data import.
+
+Technical details:
+- SQLite tables include pfz_bulletins, weather_alerts, ocean_state_forecast, satellite_readings, and boundary_geometries
+- Data is seeded automatically when the database is empty
+- Historical JSON/GeoJSON files can be imported into SQLite using a dedicated importer
+- Local execution is suitable for offline demos, archive testing, and low-friction deployments
+
+3. Historical data import pipeline
+The project includes a historical import path for normalized GeoJSON/JSON data files.
+
+Supported archive prefixes:
+- pfz*.json
+- weather*.json
+- ocean*.json
+- satellite*.json
+- boundary*.json
+
+Technical details:
+- Files are read from a chosen input directory
+- Records are filtered by date range
+- Imports are normalized and saved into SQLite tables
+- Seeded demo data can be replaced with imported records
+- This allows the project to run against historical data without needing a live database service
+
+4. Retrieval and repository abstraction
+The retrieval layer abstracts access to data from different sources and backends.
+
+Key concepts:
+- Repository implementations can provide live, SQLite, demo, or fallback access
+- Evidence cards are returned with traceable metadata
+- Distances are calculated using geospatial logic and nearest-neighbor sorting
+- Live feeds are prioritized, followed by local or fallback sources
+
+This lets the app behave consistently regardless of whether data comes from:
+- a PostgreSQL/PostGIS database
+- a local SQLite database
+- a demo dataset
+- empty or degraded sources
+
+5. Marine evidence cards
+The system returns structured evidence cards that describe what data supported the answer.
+
+Examples of evidence card types:
+- pfz_bulletin
+- weather_alert
+- ocean_state
+- satellite_reading
+- boundary_check
+
+Each card includes:
+- type
+- content
+- source
+- coordinates
+- valid time
+- confidence
+- raw_ref metadata for traceability
+
+This makes outputs auditable and easier to explain to operators.
+
+6. Conversational marine assistant behavior
+The application exposes a chat API for natural-language marine queries.
+
+Example queries include:
+- Where is the nearest PFZ?
+- Check local weather and sea conditions
+- Are there alerts near my coordinates?
+- What should I watch out for in this region?
+
+The backend:
+- normalizes the message
+- identifies the user location or prior session location
+- caches repeated queries by content and coordinates
+- routes the request through specialist agent logic
+- composes the final answer with evidence and map data
+
+7. Specialist agent architecture
+The application is designed around multiple specialist agents, each focusing on a specific domain.
+
+Specialist areas include:
+- marine data discovery
+- weather intelligence
+- ocean analytics
+- geospatial reasoning
+- risk assessment
+- reporting
+- user interaction
+
+The system is intentionally modular so that each agent can focus on a single retrieval or reasoning responsibility rather than conflating multiple tasks.
+
+8. Geospatial reasoning and boundary checks
+Marine decision-making depends heavily on location-aware logic.
+
+Spatial features include:
+- nearest PFZ bulletins by distance
+- weather alert checks over a region
+- ocean-state lookup near a coordinate
+- satellite observation filtering by proximity
+- boundary and protected-area checks
+
+This is important for operational safety and route planning.
+
+9. Response generation and confidence scoring
+Each specialist agent returns a confidence score and supporting evidence.
+
+The final orchestrator:
+- gathers evidence from all relevant results
+- combines summaries into a final answer
+- calculates a combined confidence estimate
+- packages the answer with map metadata and evidence cards
+
+This allows the system to produce a transparent response rather than a raw opaque result.
+
+10. API-driven backend
+The core runtime exposes a FastAPI application.
+
+Endpoints include:
+- /health for runtime and database status
+- /chat for marine queries
+
+Technical details:
+- CORS is enabled for browser usage
+- Pydantic models validate request and response payloads
+- Session state is stored to preserve context across follow-up questions
+- The app supports both local and live data flows
+
+11. Frontend console
+The project includes a Next.js dashboard for user interaction.
+
+Frontend capabilities:
+- question input and mission presets
+- manual latitude/longitude entry
+- browser geolocation support
+- health status display
+- source/database info display
+- confidence display
+- evidence list rendering
+- marine operations-style interface
+
+This creates a user-facing operational console that is suitable for demos and local exploration.
+
+12. Operational robustness and fallback behavior
+The project is designed to fail gracefully when data sources are unavailable.
+
+Examples:
+- empty live tables do not crash the system
+- missing feeds fall back to alternative sources
+- missing historical data does not prevent the app from running
+- low-confidence answers are returned instead of fabricated claims
+
+This is essential for legitimate marine operations where “unknown” or “insufficient evidence” is preferable to confident false statements.
+
+13. Project structure overview
+Core folders and their purpose:
+
+- src/orca/
+  Contains the application core: config, API layer, knowledge layer, orchestration, and runtime logic.
+
+- agents/
+  Holds specialist agents responsible for marine reasoning and retrieval.
+
+- ingestion/
+  Contains the adapters and import scripts for historical and source-specific data loading.
+
+- db/
+  Contains database schema definitions and SQL resources.
+
+- data/
+  Stores local SQLite database and archive files used for local runs.
+
+- frontend/
+  Contains the Next.js user interface.
+
+- tests/
+  Contains verification and regression tests for API and logic behavior.
+
+14. Technical stack
+The project uses a mixed architecture with both simple local workflows and production-oriented optional paths.
+
+Common technologies:
+- Python
+- FastAPI
+- SQLite
+- SQLAlchemy-like database abstraction patterns
+- Pydantic models
+- GeoJSON / JSON processing
+- Next.js and React for the frontend
+- geospatial data handling concepts
+
+Optional production paths:
+- PostgreSQL/PostGIS
+- live marine data feeds
+- external public APIs
+
+15. Data model and schema
+The central schema defines tables for marine operational data.
+
+Examples:
+- pfz_bulletins stores PFZ advisory metadata and geometry
+- weather_alerts stores alert geometry, severity, and validity windows
+- ocean_state_forecast stores wave, current, and tide scenarios
+- satellite_readings stores ocean remote-sensing observations
+- boundary_geometries stores EEZ, MPA, and other boundaries
+
+These tables are designed to support the reasoning logic used by the agents.
+
+16. Why the project is useful
+This project is useful for:
+- local marine intelligence prototyping
+- coastal operational support
+- fisheries and marine safety workflows
+- rapid data exploration without container overhead
+- running historical archive-based analysis locally
+- demonstrating an end-to-end marine AI workflow in a deployment-friendly form
+
+17. Current operational state
+At the current state of the project:
+- the backend runs locally without Docker
+- SQLite is the default local database mode
+- historical data can be imported into the database
+- the app can answer queries using local archive data instead of only demo records
+- the system remains ready for optional live or production-style source connections
+
+Summary
+The ORCA project is a marine intelligence system that combines local SQLite data, historical archive import, geospatial reasoning, specialist agents, and a conversational interface into a single working application. It is designed to be practical for local use, flexible for real-world data ingestion, and extendable for broader marine operations or production deployments.
+
+This project balances usability and technical depth: it is lightweight enough to run locally, but it is still designed around real marine-analysis workflows, data provenance, operator-facing evidence, and bounded confidence.

@@ -1,0 +1,518 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.75,
+          15.1
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T06:00:00Z",
+        "wave_height_m": 0.8,
+        "wind_speed_kmh": 14.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.25,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.75,
+          15.1
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T12:00:00Z",
+        "wave_height_m": 0.9,
+        "wind_speed_kmh": 16.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.5,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.75,
+          15.1
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T18:00:00Z",
+        "wave_height_m": 1.2,
+        "wind_speed_kmh": 18.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.75,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          69.0,
+          22.7
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T06:00:00Z",
+        "wave_height_m": 0.8,
+        "wind_speed_kmh": 14.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.25,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          69.0,
+          22.7
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T12:00:00Z",
+        "wave_height_m": 0.9,
+        "wind_speed_kmh": 16.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.5,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          69.0,
+          22.7
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T18:00:00Z",
+        "wave_height_m": 1.2,
+        "wind_speed_kmh": 18.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.75,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.0,
+          16.8
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T06:00:00Z",
+        "wave_height_m": 0.8,
+        "wind_speed_kmh": 14.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.25,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.0,
+          16.8
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T12:00:00Z",
+        "wave_height_m": 1.2,
+        "wind_speed_kmh": 22.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.5,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.0,
+          16.8
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T18:00:00Z",
+        "wave_height_m": 1.2,
+        "wind_speed_kmh": 18.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.75,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.5,
+          14.2
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T06:00:00Z",
+        "wave_height_m": 0.8,
+        "wind_speed_kmh": 14.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.25,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.5,
+          14.2
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T12:00:00Z",
+        "wave_height_m": 0.9,
+        "wind_speed_kmh": 16.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.5,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.5,
+          14.2
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T18:00:00Z",
+        "wave_height_m": 1.2,
+        "wind_speed_kmh": 18.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.75,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.1,
+          10.2
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T06:00:00Z",
+        "wave_height_m": 0.8,
+        "wind_speed_kmh": 14.0,
+        "current_speed_ms": 0.6,
+        "tide_level_m": 1.25,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.1,
+          10.2
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T12:00:00Z",
+        "wave_height_m": 0.9,
+        "wind_speed_kmh": 16.0,
+        "current_speed_ms": 0.6,
+        "tide_level_m": 1.5,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.1,
+          10.2
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T18:00:00Z",
+        "wave_height_m": 1.2,
+        "wind_speed_kmh": 18.0,
+        "current_speed_ms": 0.6,
+        "tide_level_m": 1.75,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          80.27,
+          13.08
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T06:00:00Z",
+        "wave_height_m": 0.8,
+        "wind_speed_kmh": 14.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.25,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          80.27,
+          13.08
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T12:00:00Z",
+        "wave_height_m": 1.2,
+        "wind_speed_kmh": 22.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.5,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          80.27,
+          13.08
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T18:00:00Z",
+        "wave_height_m": 1.8,
+        "wind_speed_kmh": 30.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.75,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          82.2,
+          16.7
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T06:00:00Z",
+        "wave_height_m": 0.8,
+        "wind_speed_kmh": 14.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.25,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          82.2,
+          16.7
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T12:00:00Z",
+        "wave_height_m": 0.9,
+        "wind_speed_kmh": 16.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.5,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          82.2,
+          16.7
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T18:00:00Z",
+        "wave_height_m": 1.2,
+        "wind_speed_kmh": 18.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.75,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.8,
+          19.8
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T06:00:00Z",
+        "wave_height_m": 0.8,
+        "wind_speed_kmh": 14.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.25,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.8,
+          19.8
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T12:00:00Z",
+        "wave_height_m": 1.2,
+        "wind_speed_kmh": 22.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.5,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.8,
+          19.8
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T18:00:00Z",
+        "wave_height_m": 1.8,
+        "wind_speed_kmh": 30.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.75,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          68.0,
+          15.0
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T06:00:00Z",
+        "wave_height_m": 0.8,
+        "wind_speed_kmh": 14.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.25,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          68.0,
+          15.0
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T12:00:00Z",
+        "wave_height_m": 0.9,
+        "wind_speed_kmh": 16.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.5,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          68.0,
+          15.0
+        ]
+      },
+      "properties": {
+        "forecast_time": "2026-09-14T18:00:00Z",
+        "wave_height_m": 1.2,
+        "wind_speed_kmh": 18.0,
+        "current_speed_ms": 1.1,
+        "tide_level_m": 1.75,
+        "source": "ORCA Demo Fixture (provider reference: INCOIS OSF)",
+        "source_url": "demo://orca/ocean"
+      }
+    }
+  ]
+}

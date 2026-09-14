@@ -1,0 +1,85 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              72.7,
+              14.9
+            ],
+            [
+              73.9,
+              14.9
+            ],
+            [
+              73.9,
+              15.6
+            ],
+            [
+              72.7,
+              15.6
+            ],
+            [
+              72.7,
+              14.9
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "region_name": "Konkan Shelf PFZ",
+        "issued_date": "2026-09-14",
+        "valid_until": "2026-09-17",
+        "chlorophyll_level": "high",
+        "sst_range": "28-30C",
+        "advisory_text": "Elevated chlorophyll along the Konkan shelf with productive fishing conditions.",
+        "source": "INCOIS",
+        "source_url": "https://example.org/pfz/konkan-shelf-2025"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              73.0,
+              15.7
+            ],
+            [
+              74.2,
+              15.7
+            ],
+            [
+              74.2,
+              16.5
+            ],
+            [
+              73.0,
+              16.5
+            ],
+            [
+              73.0,
+              15.7
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "region_name": "Goa Offshore PFZ",
+        "issued_date": "2026-09-22",
+        "valid_until": "2026-09-26",
+        "chlorophyll_level": "moderate",
+        "sst_range": "29-31C",
+        "advisory_text": "Moderate fish aggregation potential offshore Goa with stable offshore winds.",
+        "source": "INCOIS",
+        "source_url": "https://example.org/pfz/goa-offshore-2025"
+      }
+    }
+  ]
+}

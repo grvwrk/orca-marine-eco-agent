@@ -1,0 +1,356 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              73.25,
+              14.6
+            ],
+            [
+              74.25,
+              14.6
+            ],
+            [
+              74.25,
+              15.6
+            ],
+            [
+              73.25,
+              15.6
+            ],
+            [
+              73.25,
+              14.6
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "alert_type": "weather_observation",
+        "severity": "low",
+        "valid_from": "2026-09-14T00:00:00Z",
+        "valid_until": "2026-09-15T00:00:00Z",
+        "description": "No severe alert in the demo sector.",
+        "source": "ORCA Demo Fixture (provider reference: IMD)",
+        "source_url": "demo://orca/weather"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              68.5,
+              22.2
+            ],
+            [
+              69.5,
+              22.2
+            ],
+            [
+              69.5,
+              23.2
+            ],
+            [
+              68.5,
+              23.2
+            ],
+            [
+              68.5,
+              22.2
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "alert_type": "weather_observation",
+        "severity": "low",
+        "valid_from": "2026-09-14T00:00:00Z",
+        "valid_until": "2026-09-15T00:00:00Z",
+        "description": "No severe alert in the demo sector.",
+        "source": "ORCA Demo Fixture (provider reference: IMD)",
+        "source_url": "demo://orca/weather"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              72.2,
+              16.0
+            ],
+            [
+              73.8,
+              16.0
+            ],
+            [
+              73.8,
+              17.6
+            ],
+            [
+              72.2,
+              17.6
+            ],
+            [
+              72.2,
+              16.0
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "alert_type": "fishermen_warning",
+        "severity": "high",
+        "valid_from": "2026-09-14T00:00:00Z",
+        "valid_until": "2026-09-15T00:00:00Z",
+        "description": "Operational risk is elevated despite fishing potential.",
+        "source": "ORCA Demo Fixture (provider reference: IMD)",
+        "source_url": "demo://orca/weather"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              74.0,
+              13.7
+            ],
+            [
+              75.0,
+              13.7
+            ],
+            [
+              75.0,
+              14.7
+            ],
+            [
+              74.0,
+              14.7
+            ],
+            [
+              74.0,
+              13.7
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "alert_type": "weather_observation",
+        "severity": "low",
+        "valid_from": "2026-09-14T00:00:00Z",
+        "valid_until": "2026-09-15T00:00:00Z",
+        "description": "No severe alert in the demo sector.",
+        "source": "ORCA Demo Fixture (provider reference: IMD)",
+        "source_url": "demo://orca/weather"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.6,
+              9.7
+            ],
+            [
+              76.6,
+              9.7
+            ],
+            [
+              76.6,
+              10.7
+            ],
+            [
+              75.6,
+              10.7
+            ],
+            [
+              75.6,
+              9.7
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "alert_type": "weather_observation",
+        "severity": "low",
+        "valid_from": "2026-09-14T00:00:00Z",
+        "valid_until": "2026-09-15T00:00:00Z",
+        "description": "No severe alert in the demo sector.",
+        "source": "ORCA Demo Fixture (provider reference: IMD)",
+        "source_url": "demo://orca/weather"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              79.47,
+              12.28
+            ],
+            [
+              81.07,
+              12.28
+            ],
+            [
+              81.07,
+              13.88
+            ],
+            [
+              79.47,
+              13.88
+            ],
+            [
+              79.47,
+              12.28
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "alert_type": "cyclone_watch",
+        "severity": "severe",
+        "valid_from": "2026-09-14T00:00:00Z",
+        "valid_until": "2026-09-15T00:00:00Z",
+        "description": "Operational risk is elevated despite fishing potential.",
+        "source": "ORCA Demo Fixture (provider reference: IMD)",
+        "source_url": "demo://orca/weather"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.7,
+              16.2
+            ],
+            [
+              82.7,
+              16.2
+            ],
+            [
+              82.7,
+              17.2
+            ],
+            [
+              81.7,
+              17.2
+            ],
+            [
+              81.7,
+              16.2
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "alert_type": "weather_observation",
+        "severity": "low",
+        "valid_from": "2026-09-14T00:00:00Z",
+        "valid_until": "2026-09-15T00:00:00Z",
+        "description": "No severe alert in the demo sector.",
+        "source": "ORCA Demo Fixture (provider reference: IMD)",
+        "source_url": "demo://orca/weather"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              85.0,
+              19.0
+            ],
+            [
+              86.6,
+              19.0
+            ],
+            [
+              86.6,
+              20.6
+            ],
+            [
+              85.0,
+              20.6
+            ],
+            [
+              85.0,
+              19.0
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "alert_type": "cyclone_watch",
+        "severity": "severe",
+        "valid_from": "2026-09-14T00:00:00Z",
+        "valid_until": "2026-09-15T00:00:00Z",
+        "description": "Operational risk is elevated despite fishing potential.",
+        "source": "ORCA Demo Fixture (provider reference: IMD)",
+        "source_url": "demo://orca/weather"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              67.5,
+              14.5
+            ],
+            [
+              68.5,
+              14.5
+            ],
+            [
+              68.5,
+              15.5
+            ],
+            [
+              67.5,
+              15.5
+            ],
+            [
+              67.5,
+              14.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "alert_type": "weather_observation",
+        "severity": "low",
+        "valid_from": "2026-09-14T00:00:00Z",
+        "valid_until": "2026-09-15T00:00:00Z",
+        "description": "No severe alert in the demo sector.",
+        "source": "ORCA Demo Fixture (provider reference: IMD)",
+        "source_url": "demo://orca/weather"
+      }
+    }
+  ]
+}

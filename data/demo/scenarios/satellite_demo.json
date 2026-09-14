@@ -1,0 +1,329 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.75,
+          15.1
+        ]
+      },
+      "properties": {
+        "product": "chlorophyll",
+        "value": 1.8,
+        "unit": "mg/m3",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.75,
+          15.1
+        ]
+      },
+      "properties": {
+        "product": "sst",
+        "value": 29.0,
+        "unit": "C",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          69.0,
+          22.7
+        ]
+      },
+      "properties": {
+        "product": "chlorophyll",
+        "value": 1.8,
+        "unit": "mg/m3",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          69.0,
+          22.7
+        ]
+      },
+      "properties": {
+        "product": "sst",
+        "value": 29.0,
+        "unit": "C",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.0,
+          16.8
+        ]
+      },
+      "properties": {
+        "product": "chlorophyll",
+        "value": 1.8,
+        "unit": "mg/m3",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.0,
+          16.8
+        ]
+      },
+      "properties": {
+        "product": "sst",
+        "value": 29.0,
+        "unit": "C",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.5,
+          14.2
+        ]
+      },
+      "properties": {
+        "product": "chlorophyll",
+        "value": 1.8,
+        "unit": "mg/m3",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.5,
+          14.2
+        ]
+      },
+      "properties": {
+        "product": "sst",
+        "value": 29.0,
+        "unit": "C",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.1,
+          10.2
+        ]
+      },
+      "properties": {
+        "product": "chlorophyll",
+        "value": 0.25,
+        "unit": "mg/m3",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.1,
+          10.2
+        ]
+      },
+      "properties": {
+        "product": "sst",
+        "value": 26.0,
+        "unit": "C",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          80.27,
+          13.08
+        ]
+      },
+      "properties": {
+        "product": "chlorophyll",
+        "value": 0.9,
+        "unit": "mg/m3",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          80.27,
+          13.08
+        ]
+      },
+      "properties": {
+        "product": "sst",
+        "value": 29.0,
+        "unit": "C",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          82.2,
+          16.7
+        ]
+      },
+      "properties": {
+        "product": "chlorophyll",
+        "value": 0.9,
+        "unit": "mg/m3",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          82.2,
+          16.7
+        ]
+      },
+      "properties": {
+        "product": "sst",
+        "value": 29.0,
+        "unit": "C",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.8,
+          19.8
+        ]
+      },
+      "properties": {
+        "product": "chlorophyll",
+        "value": 0.9,
+        "unit": "mg/m3",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.8,
+          19.8
+        ]
+      },
+      "properties": {
+        "product": "sst",
+        "value": 29.0,
+        "unit": "C",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          68.0,
+          15.0
+        ]
+      },
+      "properties": {
+        "product": "chlorophyll",
+        "value": 0.9,
+        "unit": "mg/m3",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          68.0,
+          15.0
+        ]
+      },
+      "properties": {
+        "product": "sst",
+        "value": 29.0,
+        "unit": "C",
+        "observed_at": "2026-09-14T00:00:00Z",
+        "source": "ORCA Demo Fixture (provider reference: Oceansat)",
+        "source_url": "demo://orca/satellite"
+      }
+    }
+  ]
+}

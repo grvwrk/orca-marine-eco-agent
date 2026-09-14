@@ -1,0 +1,503 @@
+ORCA DATA PROVENANCE, SEEDING, HISTORICAL IMPORT, AND INGESTION STATUS
+=======================================================================
+
+Report date: 2026-09-14
+Project: ORCA Marine Intelligence
+
+This document explains exactly where the data comes from, how it enters the
+system, what is currently in the local SQLite database, how much of it is real,
+and which ingestion paths are incomplete, unavailable, or fallback-only.
+
+
+1. EXECUTIVE SUMMARY
+--------------------
+
+The local application is SQLite-first and stores data in:
+
+    data/orca.sqlite3
+
+On first use, SQLiteDatabase.initialize() creates five tables and may insert a
+small set of demo seed rows. The seed path is intended to make a fresh local
+installation usable without Docker, Postgres, network access, or API keys.
+
+The repository also contains normalized historical JSON/GeoJSON fixtures under:
+
+    data/arabian-sea/
+
+Those files were imported into the SQLite database with:
+
+    python -m ingestion.import_historic_sqlite \
+      --input-dir data/arabian-sea \
+      --db-path data/orca.sqlite3 \
+      --start 2005-01-01 \
+      --replace-seeded-data
+
+The current database contains two rows in each of the five tables. The seeded
+demo rows have been replaced by the historical fixture rows in the current
+workspace database.
+
+Important reality classification:
+
+- The local seed data is synthetic/demo data.
+- The current imported 2025 records are normalized historical demonstration
+  fixtures. They have realistic structure and provider labels, but their
+  source URLs are example.org URLs and are not evidence that the records were
+  downloaded from INCOIS or IMD.
+- The live ingestion adapters are implemented, but they are not the source of
+  the current SQLite rows.
+- No current real-time provider feed is guaranteed by the local demo path.
+- The system is designed to degrade gracefully to empty or low-confidence
+  results when live sources are unavailable.
+
+
+2. HOW DATA FLOWS THROUGH THE APPLICATION
+------------------------------------------
+
+At startup and during API requests, the flow is:
+
+1. Settings are read from environment variables in src/orca/config.py.
+
+   Relevant variables:
+
+   ORCA_USE_SQLITE=1
+   ORCA_SQLITE_PATH=data/orca.sqlite3
+   ORCA_DEMO_MODE=1 or 0
+   ORCA_DATABASE_URL=...              optional Postgres/PostGIS connection
+   ORCA_PFZ_FEED_URL=...              optional normalized live PFZ feed
+   ORCA_IMD_API_URL=...               optional normalized weather feed/API base
+   ORCA_OSF_FEED_URL=...              optional normalized ocean forecast feed
+   ORCA_SATELLITE_FEED_URL=...        optional normalized satellite feed
+
+2. SQLiteDatabase creates the local database file and tables if needed.
+
+3. SQLiteDatabase.seed_demo_data() checks only whether pfz_bulletins has a row.
+   If it is empty, it inserts the built-in demo records described below.
+   If PFZ already has a row, it returns without inserting the seed set.
+
+4. The API orchestration asks the retrieval repository for evidence.
+
+5. When ORCA_USE_SQLITE=1, SQLiteRepository is the local fallback repository.
+   It reads rows from SQLite, filters by time, ranks geographic records by
+   approximate distance, and returns EvidenceCard objects.
+
+6. HybridRepository attempts configured normalized live feeds first. If a live
+   adapter returns no cards or fails with a handled network/data error, it uses
+   the SQLite fallback repository.
+
+7. The API combines specialist results into the response. The frontend shows
+   the answer, evidence cards, source references, confidence, map points, and
+   agent trace.
+
+8. If no usable evidence exists, the application returns a low-confidence or
+   cautionary result rather than claiming certainty.
+
+
+3. SQLITE TABLES AND CONTENT
+----------------------------
+
+The local schema contains these five data domains.
+
+A. pfz_bulletins
+
+Purpose:
+Potential Fishing Zone bulletins and advisory geometry.
+
+Important fields:
+region_name, issued_date, valid_until, zone_geom, lat, lon,
+chlorophyll_level, sst_range, advisory_text, source, source_url.
+
+Current database rows: 2.
+Current rows:
+- Konkan Shelf PFZ, issued 2025-09-02, valid through 2025-09-05.
+- Goa Offshore PFZ, issued 2025-09-10, valid through 2025-09-14.
+
+Current provenance:
+source=INCOIS.
+source_url values point to example.org demonstration URLs.
+
+B. weather_alerts
+
+Purpose:
+Lightning, cyclone, fishermen warning, and other weather alert areas.
+
+Important fields:
+alert_type, severity, affected_area, lat, lon, valid_from, valid_until,
+description, source, source_url.
+
+Current database rows: 2.
+Current rows:
+- Moderate lightning risk near the Karnataka/Goa shelf, 2025-09-02 to
+  2025-09-03.
+- Low-level cyclone watch for the northern Arabian Sea shelf, 2025-09-18 to
+  2025-09-20.
+
+Current provenance:
+source=IMD.
+source_url values point to example.org demonstration URLs.
+
+C. ocean_state_forecast
+
+Purpose:
+Forecast values for waves, wind, currents, and tide.
+
+Important fields:
+lat, lon, forecast_time, wave_height_m, wind_speed_kmh,
+current_speed_ms, tide_level_m, source, source_url.
+
+Current database rows: 2.
+Current rows:
+- 2025-09-14 06:00 UTC at 73.75E, 15.10N.
+- 2025-09-14 12:00 UTC at 73.90E, 15.80N.
+
+Current provenance:
+source=INCOIS OSF.
+source_url points to an example.org demonstration URL.
+
+D. satellite_readings
+
+Purpose:
+Point observations such as chlorophyll and sea-surface temperature.
+
+Important fields:
+product, value, unit, lat, lon, observed_at, source, source_url.
+
+Current database rows: 2.
+Current rows:
+- chlorophyll = 1.36 mg/m3 at 73.75E, 15.10N, observed 2025-09-14 06:00 UTC.
+- sst = 29.6 C at 73.75E, 15.10N, observed 2025-09-14 06:00 UTC.
+
+Current provenance:
+source=Oceansat-3 OCM.
+source_url values point to example.org demonstration URLs.
+
+E. boundary_geometries
+
+Purpose:
+Marine protected area and EEZ/boundary geometry references.
+
+Important fields:
+boundary_type, name, geom, lat, lon, metadata, source_url.
+
+Current database rows: 2.
+Current rows:
+- MPA: Goa coastal protected zone.
+- EEZ: Indian EEZ shelf corridor.
+
+Current provenance:
+metadata identifies these as historical-demo records from 2025.
+source_url values point to example.org demonstration URLs.
+
+Note: boundary_geometries does not have a source column in the SQLite schema;
+its provenance is carried by source_url and metadata.
+
+
+4. WHAT IS SEEDED ON A FRESH SQLITE DATABASE
+---------------------------------------------
+
+The built-in seed is in src/orca/knowledge/database.py in seed_demo_data().
+It runs after table creation and only when pfz_bulletins is empty.
+
+The built-in seed contains seven records total:
+
+- 1 PFZ bulletin:
+  Konkan PFZ at 15.10N, 73.75E, high chlorophyll, SST 28-30C.
+
+- 1 weather alert:
+  A moderate lightning record at 15.10N, 73.75E. Its description says that
+  no severe cyclone alert is seeded in the demo zone.
+
+- 1 ocean-state forecast:
+  Waves 0.8 m, wind 18 km/h, current 0.7 m/s, tide 1.2 m.
+
+- 2 satellite readings:
+  chlorophyll 1.24 mg/m3 and SST 29.8 C at 15.10N, 73.75E.
+
+- 2 boundary records:
+  Goa coastal protected zone (MPA) and Indian maritime boundary (EEZ).
+
+Seed provenance is deliberately explicit:
+
+- INCOIS demo
+- IMD demo
+- INCOIS OSF demo
+- Oceansat-3 OCM demo
+- https://demo.local/... URLs
+
+These are not live observations. They are deterministic, plausible demo values
+used to keep the app functional when no import or external feed is available.
+
+One implementation detail matters: the seed guard checks PFZ only. If PFZ is
+present, the entire seed function returns. The historical importer therefore
+has an explicit --replace-seeded-data option that clears all five tables before
+loading a full archive set.
+
+
+5. HOW HISTORICAL IMPORT WORKS
+------------------------------
+
+The importer is ingestion/import_historic_sqlite.py.
+
+Accepted file naming patterns:
+
+- pfz*.json
+- weather*.json or imd*.json
+- ocean*.json or osf*.json
+- satellite*.json, sst*.json, or chlorophyll*.json
+- boundary*.json, eez*.json, or mpa*.json
+
+Accepted payload shapes include FeatureCollection, Feature, or normalized lists
+through ingestion.common.features().
+
+For each feature, the importer:
+
+1. Reads JSON or GeoJSON.
+2. Extracts properties.
+3. Derives a representative latitude/longitude from geometry coordinates, or
+   uses explicit lat/lon properties.
+4. Stores the original geometry as JSON text in SQLite.
+5. Maps provider properties into the relevant normalized table.
+6. Applies the requested date range to PFZ, weather, ocean, and satellite rows.
+7. Preserves source/source_url fields where the schema supports them.
+8. Inserts the normalized record.
+
+With --replace-seeded-data, all five tables are deleted first. The importer
+then loads the archive files in sorted filename order.
+
+The current archive directory contains:
+
+- pfz_arabian_sea_2025.json: 2 features.
+- weather_arabian_sea_2025.json: 2 features.
+- ocean_arabian_sea_2025.json: 2 features.
+- satellite_arabian_sea_2025.json: 2 features.
+- boundary_arabian_sea_2025.json: 2 features.
+
+That matches the current SQLite count of two rows per table.
+
+
+6. HOW REAL IS THE CURRENT DATA?
+---------------------------------
+
+The most accurate description is:
+
+"Structurally realistic, provenance-labelled historical demonstration data;
+not verified live provider data."
+
+Why it is useful:
+
+- The records use realistic domain fields and units.
+- The geometries are valid-shaped GeoJSON features.
+- The coordinates are in the Arabian Sea/Goa region.
+- The source labels match the intended providers.
+- The data exercises the same normalized schema and retrieval path used by
+  future live imports.
+- The frontend can display source, time, coordinates, raw_ref, and confidence.
+
+Why it must not be presented as live or independently verified:
+
+- The archive source URLs use example.org, not actual provider endpoints.
+- The timestamps are from 2025 and are not current as of this report.
+- The fixture files are included in the repository and were imported locally.
+- No download provenance, checksum, request log, or provider response is
+  attached to these fixture records.
+- The local SQLite path does not automatically refresh from a provider.
+
+The current imported records therefore support demonstrations, schema testing,
+retrieval testing, map rendering, and evidence-trace UI testing. They should
+not be used alone for operational fishing, navigation, safety, or weather
+decisions.
+
+
+7. LIVE INGESTION ADAPTERS
+--------------------------
+
+A. INCOIS ERDDAP satellite ingestion
+
+File: ingestion/ingest_erddap.py
+
+Intended inputs:
+- NOAA_AVHRR_AMSR_datasets for SST.
+- incois_oceansat2_datasets for chlorophyll.
+- ascat_daily_datasets for wind speed.
+
+Behavior:
+- Calls the INCOIS ERDDAP griddap endpoint.
+- Uses value-based time/latitude/longitude constraints.
+- Converts response grid rows into point readings.
+- Skips malformed, null, and NaN values.
+- Inserts into PostGIS satellite_readings.
+
+Status in this workspace:
+Implemented and parser-tested, but not the source of the current SQLite
+records. It requires network access and a configured Postgres/PostGIS database
+for insertion. A failed live request causes the population orchestrator to
+fall back to synthetic mock satellite readings.
+
+B. ARGO ingestion
+
+File: ingestion/ingest_argo.py
+
+Behavior:
+- Calls the INCOIS ERDDAP tabledap endpoint for Indian_ARGO_Floats.
+- Reads temperature and salinity measurements.
+- Loads only QC=1 readings.
+- Rejects suspect/bad or malformed rows.
+- Inserts validated values into the PostGIS satellite_readings table as
+  argo_temperature or argo_salinity products.
+
+Status in this workspace:
+Parser and QC behavior are tested. It is a live-only adapter with no synthetic
+ARGO fallback. If the network/provider request fails, the orchestrator logs
+"ARGO ingestion failed" and loads zero ARGO records.
+
+C. IMD weather ingestion
+
+File: ingestion/ingest_imd.py
+
+Preferred path:
+IMD API endpoints, when ORCA_IMD_API_URL and ORCA_IMD_API_KEY are configured
+and access/IP whitelisting is available.
+
+Fallback path:
+Scrapes public IMD Mausam fishermen-warning pages with BeautifulSoup, extracts
+warning-like text, assigns approximate severity, and builds a bounding-box
+polygon for the configured region.
+
+Status in this workspace:
+The API path is not generally available without whitelisting. The scraper is
+implemented, but it depends on the public page structure and network access.
+The current SQLite records came from the historical fixture, not from a proven
+run of this scraper.
+
+D. Boundary ingestion
+
+File: ingestion/ingest_boundaries.py
+
+Intended sources:
+- Marine Regions for EEZ data.
+- Protected Planet/WDPA for MPA data.
+
+Behavior:
+Loads a supplied GeoJSON URL into PostGIS using PostGIS geometry functions.
+
+Status in this workspace:
+The generic adapter is implemented, but the population orchestrator explicitly
+contains a TODO for downloading real EEZ and MPA data when live mode is used.
+The --skip-live-sources path creates only an approximate mock India EEZ. The
+current SQLite boundaries are historical-demo fixtures, not verified downloads
+from Marine Regions or Protected Planet.
+
+E. PFZ ingestion
+
+File: ingestion/ingest_pfz.py
+
+Behavior:
+Loads normalized PFZ JSON/GeoJSON into PostGIS.
+
+Status in this workspace:
+No documented public machine-readable INCOIS PFZ API was found. PFZ data is
+therefore handled by manual curation or normalized files. The population
+orchestrator creates mock curated PFZ rows as its fallback. The current SQLite
+PFZ rows came from the normalized 2025 fixture.
+
+F. Ocean State Forecast ingestion
+
+File: ingestion/ingest_osf.py
+
+Behavior:
+Loads normalized forecast points containing waves, wind, current, and tide.
+
+Status in this workspace:
+The normalized adapter exists, but no current live OSF download is guaranteed
+by the local SQLite setup. The current rows came from the 2025 fixture.
+
+G. Generic live normalized feeds
+
+File: src/orca/knowledge/live_api.py
+
+If feed URLs are configured, the API can read normalized JSON/GeoJSON directly,
+cache it for ORCA_FEED_CACHE_TTL seconds, and convert it to EvidenceCard objects.
+Network, schema, and parsing failures are caught by the live repository and
+result in fallback retrieval rather than an API crash.
+
+
+8. WHAT FAILED, IS UNAVAILABLE, OR IS ONLY A FALLBACK
+------------------------------------------------------
+
+The following are the important limitations and failed/unavailable paths:
+
+1. Real-time SQLite ingestion is not automatic.
+   SQLite is a local store. It does not poll INCOIS, IMD, or satellite feeds by
+   itself. An explicit ingestion/import job is required.
+
+2. The current historical URLs are demonstration URLs.
+   The example.org links in data/arabian-sea are not proof of provider download.
+
+3. IMD API access is pending.
+   The adapter expects API access and credentials/whitelisting. Without those,
+   the API path returns zero and the scraper is attempted.
+
+4. IMD scraping is not guaranteed.
+   It depends on network access and heuristic HTML parsing. A changed page
+   layout or unavailable site can result in zero alerts.
+
+5. INCOIS ERDDAP access can fail.
+   Network, SSL, timeout, dataset, or schema failures prevent live satellite
+   loading. The orchestrator then generates synthetic mock satellite data for
+   the PostGIS demo path.
+
+6. ARGO has no mock fallback.
+   If ERDDAP is unavailable or insertion fails, ARGO contributes zero rows.
+
+7. Real boundary download is incomplete in the orchestrator.
+   The production download steps for Marine Regions and Protected Planet are
+   marked TODO. The generic boundary loader still needs a real URL and a live
+   PostGIS database.
+
+8. PFZ has no documented machine-readable provider API.
+   Manual curation or normalized files are required. The fallback PFZ records
+   are not automatically verified against a live INCOIS bulletin.
+
+9. PostGIS is optional but not used by the local default.
+   The PostGIS repository requires ORCA_DATABASE_URL, psycopg, PostGIS geometry
+   functions, and a running database. The no-Docker local path uses SQLite.
+
+10. Historical data can be stale relative to the current date.
+    The current fixture rows are dated 2025, while this report is dated 2026.
+    Time filtering can therefore correctly return no current PFZ/weather/ocean
+    evidence even though rows exist in the database.
+
+
+9. VERIFIED CURRENT STATE
+-------------------------
+
+At the time of this report:
+
+- data/orca.sqlite3 exists.
+- SQLite has 2 rows in each of its 5 domain tables.
+- The current rows are from the 2025 Arabian Sea fixture set.
+- Seed demo rows were replaced during the historical import.
+- The FastAPI health endpoint reports SQLite when ORCA_USE_SQLITE=1.
+- The frontend displays mode, evidence, confidence, map location, and agent
+  trace from the API response.
+- Live adapters are code paths, not evidence that a live ingestion run has
+  succeeded in the current SQLite database.
+
+
+10. RECOMMENDED CLAIM FOR DEMOS AND DOCUMENTATION
+-------------------------------------------------
+
+Use this wording:
+
+"ORCA runs locally on a SQLite evidence store populated with normalized
+historical demonstration fixtures and a deterministic fallback seed. Its
+retrieval, evidence, map, confidence, and multi-agent trace paths are real and
+working. Live INCOIS/IMD ingestion adapters are implemented with fallbacks, but
+live freshness and provider verification require network access, configured
+credentials/endpoints, and a PostGIS or explicitly managed ingestion job."
+
+Do not claim:
+
+- that the current SQLite rows are live;
+- that example.org URLs are upstream provider downloads;
+- that the current system is safe for operational navigation or fishing;
+- that every ingestion adapter has successfully run against a live provider.

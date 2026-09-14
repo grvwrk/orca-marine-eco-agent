@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [73.75, 15.1]
+      },
+      "properties": {
+        "product": "chlorophyll",
+        "value": 1.36,
+        "unit": "mg/m3",
+        "observed_at": "2025-09-14T06:00:00Z",
+        "source": "Oceansat-3 OCM",
+        "source_url": "https://example.org/satellite/chlorophyll-2025"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [73.75, 15.1]
+      },
+      "properties": {
+        "product": "sst",
+        "value": 29.6,
+        "unit": "C",
+        "observed_at": "2025-09-14T06:00:00Z",
+        "source": "Oceansat-3 OCM",
+        "source_url": "https://example.org/satellite/sst-2025"
+      }
+    }
+  ]
+}

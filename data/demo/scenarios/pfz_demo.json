@@ -1,0 +1,365 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              73.4,
+              14.75
+            ],
+            [
+              74.1,
+              14.75
+            ],
+            [
+              74.1,
+              15.45
+            ],
+            [
+              73.4,
+              15.45
+            ],
+            [
+              73.4,
+              14.75
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "region_name": "Goa Offshore PFZ",
+        "issued_date": "2026-09-14",
+        "valid_until": "2026-09-16",
+        "chlorophyll_level": "high",
+        "sst_range": "28-30C",
+        "advisory_text": "High potential in the Goa Offshore sector.",
+        "source": "ORCA Demo Fixture (provider reference: INCOIS)",
+        "source_url": "demo://orca/pfz"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              68.65,
+              22.349999999999998
+            ],
+            [
+              69.35,
+              22.349999999999998
+            ],
+            [
+              69.35,
+              23.05
+            ],
+            [
+              68.65,
+              23.05
+            ],
+            [
+              68.65,
+              22.349999999999998
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "region_name": "Gujarat Gulf of Kutch PFZ",
+        "issued_date": "2026-09-14",
+        "valid_until": "2026-09-16",
+        "chlorophyll_level": "high",
+        "sst_range": "28-30C",
+        "advisory_text": "High potential in the Gujarat Gulf of Kutch sector.",
+        "source": "ORCA Demo Fixture (provider reference: INCOIS)",
+        "source_url": "demo://orca/pfz"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              72.65,
+              16.45
+            ],
+            [
+              73.35,
+              16.45
+            ],
+            [
+              73.35,
+              17.150000000000002
+            ],
+            [
+              72.65,
+              17.150000000000002
+            ],
+            [
+              72.65,
+              16.45
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "region_name": "Maharashtra Konkan PFZ",
+        "issued_date": "2026-09-14",
+        "valid_until": "2026-09-16",
+        "chlorophyll_level": "high",
+        "sst_range": "28-30C",
+        "advisory_text": "High potential in the Maharashtra Konkan sector.",
+        "source": "ORCA Demo Fixture (provider reference: INCOIS)",
+        "source_url": "demo://orca/pfz"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              74.15,
+              13.85
+            ],
+            [
+              74.85,
+              13.85
+            ],
+            [
+              74.85,
+              14.549999999999999
+            ],
+            [
+              74.15,
+              14.549999999999999
+            ],
+            [
+              74.15,
+              13.85
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "region_name": "Karnataka Coast PFZ",
+        "issued_date": "2026-09-14",
+        "valid_until": "2026-09-16",
+        "chlorophyll_level": "high",
+        "sst_range": "28-30C",
+        "advisory_text": "High potential in the Karnataka Coast sector.",
+        "source": "ORCA Demo Fixture (provider reference: INCOIS)",
+        "source_url": "demo://orca/pfz"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.75,
+              9.85
+            ],
+            [
+              76.44999999999999,
+              9.85
+            ],
+            [
+              76.44999999999999,
+              10.549999999999999
+            ],
+            [
+              75.75,
+              10.549999999999999
+            ],
+            [
+              75.75,
+              9.85
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "region_name": "Kerala Coast PFZ",
+        "issued_date": "2026-09-14",
+        "valid_until": "2026-09-16",
+        "chlorophyll_level": "low",
+        "sst_range": "25-27C",
+        "advisory_text": "Low potential in the Kerala Coast sector.",
+        "source": "ORCA Demo Fixture (provider reference: INCOIS)",
+        "source_url": "demo://orca/pfz"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              79.92,
+              12.73
+            ],
+            [
+              80.61999999999999,
+              12.73
+            ],
+            [
+              80.61999999999999,
+              13.43
+            ],
+            [
+              79.92,
+              13.43
+            ],
+            [
+              79.92,
+              12.73
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "region_name": "Chennai Coast PFZ",
+        "issued_date": "2026-09-14",
+        "valid_until": "2026-09-16",
+        "chlorophyll_level": "high",
+        "sst_range": "28-30C",
+        "advisory_text": "High potential in the Chennai Coast sector.",
+        "source": "ORCA Demo Fixture (provider reference: INCOIS)",
+        "source_url": "demo://orca/pfz"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.85000000000001,
+              16.349999999999998
+            ],
+            [
+              82.55,
+              16.349999999999998
+            ],
+            [
+              82.55,
+              17.05
+            ],
+            [
+              81.85000000000001,
+              17.05
+            ],
+            [
+              81.85000000000001,
+              16.349999999999998
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "region_name": "Andhra Coast PFZ",
+        "issued_date": "2026-09-14",
+        "valid_until": "2026-09-16",
+        "chlorophyll_level": "low",
+        "sst_range": "25-27C",
+        "advisory_text": "Moderate potential in the Andhra Coast sector.",
+        "source": "ORCA Demo Fixture (provider reference: INCOIS)",
+        "source_url": "demo://orca/pfz"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              85.45,
+              19.45
+            ],
+            [
+              86.14999999999999,
+              19.45
+            ],
+            [
+              86.14999999999999,
+              20.150000000000002
+            ],
+            [
+              85.45,
+              20.150000000000002
+            ],
+            [
+              85.45,
+              19.45
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "region_name": "Odisha Coast PFZ",
+        "issued_date": "2026-09-14",
+        "valid_until": "2026-09-16",
+        "chlorophyll_level": "high",
+        "sst_range": "28-30C",
+        "advisory_text": "High potential in the Odisha Coast sector.",
+        "source": "ORCA Demo Fixture (provider reference: INCOIS)",
+        "source_url": "demo://orca/pfz"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              67.65,
+              14.65
+            ],
+            [
+              68.35,
+              14.65
+            ],
+            [
+              68.35,
+              15.35
+            ],
+            [
+              67.65,
+              15.35
+            ],
+            [
+              67.65,
+              14.65
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "region_name": "Arabian Sea Offshore PFZ",
+        "issued_date": "2026-09-14",
+        "valid_until": "2026-09-16",
+        "chlorophyll_level": "low",
+        "sst_range": "25-27C",
+        "advisory_text": "Moderate potential in the Arabian Sea Offshore sector.",
+        "source": "ORCA Demo Fixture (provider reference: INCOIS)",
+        "source_url": "demo://orca/pfz"
+      }
+    }
+  ]
+}
