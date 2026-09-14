@@ -12,7 +12,7 @@ from .models import EvidenceCard
 
 
 class Repository(Protocol):
-    def nearest_pfz(self, lat: float, lon: float, as_of: date) -> list[EvidenceCard]: ...
+    def nearest_pfz(self, lat: float, lon: float, as_of: date, comparison: bool = False) -> list[EvidenceCard]: ...
     def active_weather_alerts(self, lat: float, lon: float, start: datetime, end: datetime) -> list[EvidenceCard]: ...
     def ocean_state_at(self, lat: float, lon: float, forecast_time: datetime) -> list[EvidenceCard]: ...
     def satellite_trend(self, lat: float, lon: float, product: str, lookback_days: int) -> list[EvidenceCard]: ...
@@ -26,7 +26,7 @@ def _distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 class DemoRepository:
-    def nearest_pfz(self, lat: float, lon: float, as_of: date) -> list[EvidenceCard]:
+    def nearest_pfz(self, lat: float, lon: float, as_of: date, comparison: bool = False) -> list[EvidenceCard]:
         distance = _distance_km(lat, lon, 15.10, 73.75)
         return [EvidenceCard(type="pfz_bulletin", content=f"Potential fishing zone: Konkan coast, approximately {distance:.1f} km from your location. Chlorophyll is elevated and sea-surface temperature is favourable.", source="INCOIS demo bulletin", lat=15.10, lon=73.75, valid_time=datetime.now(timezone.utc), raw_ref={"table": "pfz_bulletins", "id": 1, "issued_date": str(as_of)})]
 
@@ -49,7 +49,7 @@ class DemoRepository:
 class EmptyRepository:
     """No-data fallback for API-only deployments and unavailable providers."""
 
-    def nearest_pfz(self, lat: float, lon: float, as_of: date) -> list[EvidenceCard]:
+    def nearest_pfz(self, lat: float, lon: float, as_of: date, comparison: bool = False) -> list[EvidenceCard]:
         return []
 
     def active_weather_alerts(self, lat: float, lon: float, start: datetime, end: datetime) -> list[EvidenceCard]:
@@ -69,7 +69,7 @@ class PostGISRepository:
     def __init__(self, database: PostGISDatabase | None = None) -> None:
         self.database = database or PostGISDatabase()
 
-    def nearest_pfz(self, lat: float, lon: float, as_of: date) -> list[EvidenceCard]:
+    def nearest_pfz(self, lat: float, lon: float, as_of: date, comparison: bool = False) -> list[EvidenceCard]:
         rows = self.database.fetch_all("""SELECT id, region_name, issued_date, advisory_text, source, ST_Y(ST_Centroid(zone_geom)) AS lat, ST_X(ST_Centroid(zone_geom)) AS lon, ST_Distance(zone_geom::geography, ST_SetSRID(ST_Point(%(lon)s, %(lat)s), 4326)::geography) AS distance_m FROM pfz_bulletins WHERE issued_date <= %(as_of)s AND (valid_until IS NULL OR valid_until >= %(as_of)s) ORDER BY zone_geom::geography <-> ST_SetSRID(ST_Point(%(lon)s, %(lat)s), 4326)::geography LIMIT 5""", {"lat": lat, "lon": lon, "as_of": as_of})
         return [EvidenceCard(type="pfz_bulletin", content=f"Potential fishing zone: {row['region_name']}, {row['distance_m'] / 1000:.1f} km away. {row.get('advisory_text') or 'No additional advisory.'}", source=row.get("source") or "INCOIS", lat=row["lat"], lon=row["lon"], valid_time=datetime.combine(row["issued_date"], datetime.min.time(), tzinfo=timezone.utc), raw_ref={"table": "pfz_bulletins", "id": row["id"]}) for row in rows]
 
@@ -113,15 +113,16 @@ class SQLiteRepository:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
         return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
-    def nearest_pfz(self, lat: float, lon: float, as_of: date) -> list[EvidenceCard]:
+    def nearest_pfz(self, lat: float, lon: float, as_of: date, comparison: bool = False) -> list[EvidenceCard]:
         rows = self.database.fetch_all(
             "SELECT * FROM pfz_bulletins WHERE issued_date <= ? AND (valid_until IS NULL OR valid_until >= ?) ORDER BY issued_date DESC",
             (as_of.isoformat(), as_of.isoformat()),
         )
         rows = [(row, _distance_km(lat, lon, row["lat"], row["lon"])) for row in rows]
-        rows = [(row, distance) for row, distance in rows if distance <= settings.max_useful_distance_km]
+        comparison_radius = settings.max_useful_distance_km * 5 if comparison else settings.max_useful_distance_km
+        rows = [(row, distance) for row, distance in rows if distance <= comparison_radius]
         rows.sort(key=lambda item: item[1])
-        return [EvidenceCard(type="pfz_bulletin", content=f"Potential fishing zone: {row['region_name']}, {distance:.1f} km away. {row.get('advisory_text') or 'No additional advisory.'}", source=row.get("source") or "INCOIS", lat=row["lat"], lon=row["lon"], valid_time=self._time(row.get("issued_date")), distance_km=distance, raw_ref={"table": "pfz_bulletins", "id": row["id"], "issued_date": row.get("issued_date")}) for row, distance in rows[:5]]
+        return [EvidenceCard(type="pfz_bulletin", content=f"Potential fishing zone: {row['region_name']}, {distance:.1f} km away. {row.get('advisory_text') or 'No additional advisory.'}", source=row.get("source") or "INCOIS", lat=row["lat"], lon=row["lon"], valid_time=self._time(row.get("issued_date")), distance_km=distance, raw_ref={"table": "pfz_bulletins", "id": row["id"], "region_name": row["region_name"], "issued_date": row.get("issued_date")}) for row, distance in rows[:5]]
 
     def active_weather_alerts(self, lat: float, lon: float, start: datetime, end: datetime) -> list[EvidenceCard]:
         rows = self.database.fetch_all("SELECT * FROM weather_alerts WHERE valid_from <= ? AND (valid_until IS NULL OR valid_until >= ?) ORDER BY valid_from DESC", (end.isoformat(), start.isoformat()))
@@ -133,10 +134,10 @@ class SQLiteRepository:
         return cards
 
     def ocean_state_at(self, lat: float, lon: float, forecast_time: datetime) -> list[EvidenceCard]:
-        rows = self.database.fetch_all("SELECT * FROM ocean_state_forecast WHERE forecast_time >= ? ORDER BY forecast_time ASC", (forecast_time.isoformat(),))
+        rows = self.database.fetch_all("SELECT * FROM ocean_state_forecast WHERE forecast_time BETWEEN ? AND ? ORDER BY forecast_time ASC", ((forecast_time - timedelta(hours=24)).isoformat(), (forecast_time + timedelta(hours=24)).isoformat()))
         rows = [(row, _distance_km(lat, lon, row["lat"], row["lon"])) for row in rows]
         rows = [(row, distance) for row, distance in rows if distance <= settings.max_useful_distance_km]
-        rows.sort(key=lambda item: (item[1], item[0]["forecast_time"]))
+        rows.sort(key=lambda item: (item[1], abs((self._time(item[0]["forecast_time"]) or forecast_time) - forecast_time)))
         return [EvidenceCard(type="ocean_state", content=f"Forecast: waves {row['wave_height_m']} m, wind {row['wind_speed_kmh']} km/h, current {row['current_speed_ms']} m/s, tide {row['tide_level_m']} m.", source=row.get("source") or "INCOIS OSF", lat=row["lat"], lon=row["lon"], valid_time=self._time(row.get("forecast_time")), distance_km=distance, raw_ref={"table": "ocean_state_forecast", "id": row["id"], "source_url": row.get("source_url")}) for row, distance in rows[:1]]
 
     def satellite_trend(self, lat: float, lon: float, product: str, lookback_days: int) -> list[EvidenceCard]:
@@ -170,9 +171,9 @@ class HybridRepository:
         self.fallback = fallback
         self.live = live or LiveApiRepository()
 
-    def nearest_pfz(self, lat: float, lon: float, as_of: date) -> list[EvidenceCard]:
+    def nearest_pfz(self, lat: float, lon: float, as_of: date, comparison: bool = False) -> list[EvidenceCard]:
         cards = self.live.nearest_pfz(lat, lon, as_of)
-        return cards or self.fallback.nearest_pfz(lat, lon, as_of)
+        return cards or self.fallback.nearest_pfz(lat, lon, as_of, comparison=comparison)
 
     def active_weather_alerts(self, lat: float, lon: float, start: datetime, end: datetime) -> list[EvidenceCard]:
         cards = self.live.active_weather_alerts(lat, lon, start, end)
@@ -209,8 +210,8 @@ def get_repository() -> Repository:
     return HybridRepository(fallback)
 
 
-def nearest_pfz(lat: float, lon: float, as_of: date | None = None) -> list[EvidenceCard]:
-    return get_repository().nearest_pfz(lat, lon, as_of or date.today())
+def nearest_pfz(lat: float, lon: float, as_of: date | None = None, comparison: bool = False) -> list[EvidenceCard]:
+    return get_repository().nearest_pfz(lat, lon, as_of or date.today(), comparison=comparison)
 
 
 def active_weather_alerts(lat: float, lon: float, window_start: datetime | None = None, window_end: datetime | None = None) -> list[EvidenceCard]:

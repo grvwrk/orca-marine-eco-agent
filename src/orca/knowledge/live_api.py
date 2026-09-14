@@ -78,7 +78,7 @@ class LiveApiRepository:
         except (KeyError, TypeError, ValueError, OSError, requests.RequestException):
             return []
 
-    def nearest_pfz(self, lat: float, lon: float, as_of: date) -> list[EvidenceCard]:
+    def nearest_pfz(self, lat: float, lon: float, as_of: date, comparison: bool = False) -> list[EvidenceCard]:
         def load() -> list[EvidenceCard]:
             cards = []
             for feature in self._records("pfz", settings.pfz_feed_url):

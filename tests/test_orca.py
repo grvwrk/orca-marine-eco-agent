@@ -25,7 +25,7 @@ def test_live_empty_retrievals_produce_a_low_confidence_result(monkeypatch) -> N
 def test_nearest_pfz_returns_traceable_evidence() -> None:
     card = nearest_pfz(15.1, 73.75)[0]
     assert card.type == "pfz_bulletin"
-    assert card.raw_ref == {"table": "pfz_bulletins", "id": 1, "issued_date": card.raw_ref["issued_date"]}
+    assert card.raw_ref == {"table": "pfz_bulletins", "id": 1, "region_name": "Goa Offshore PFZ", "issued_date": card.raw_ref["issued_date"]}
 
 
 def test_importer_replaces_seeded_demo_rows(tmp_path) -> None:
@@ -140,31 +140,88 @@ def test_explicit_place_name_resolution_for_key_regions() -> None:
         assert abs(resolved[1] - target[1]) < 0.75
 
 
-def test_signature_query_contract_and_counterfactuals() -> None:
+def test_signature_query_structured_contract() -> None:
     query = "Near Gujarat, I’m considering fishing tomorrow morning. Find the best nearby area by balancing fishing potential, weather risk, sea state, and protected-area restrictions. Compare the top candidates, explain your recommendation, show what evidence supports it, and tell me what would need to change for your recommendation to change."
-    state = run_graph(query, location=(15.1, 73.75))
-    payload = state.response_text.lower()
+    response = TestClient(app).post("/chat", json={"session_id": "strict-signature", "message": query, "lat": 15.1, "lon": 73.75})
+    assert response.status_code == 200
+    payload = response.json()
+    brief = payload["mission_brief"]
+    candidates = brief["candidate_summary"]
+    assert candidates
+    assert all(candidate["distance_km"] <= 200 for candidate in candidates)
+    assert brief["eligible_candidates"] == candidates
+    assert brief["excluded_candidates"]
+    assert all(candidate["distance_km"] > 200 for candidate in brief["excluded_candidates"])
+    assert not ({candidate["id"] for candidate in brief["excluded_candidates"]} & {candidate["id"] for candidate in candidates})
+    assert len({candidate["name"] for candidate in candidates}) == len(candidates)
+    assert len({candidate["id"] for candidate in candidates}) == len(candidates)
+    assert all(candidate["distance_km"] is not None for candidate in candidates)
+    assert all(candidate["fishing_potential"] for candidate in candidates)
+    assert all(candidate["opportunity_score"] is not None for candidate in candidates)
+    assert all(candidate["weather_risk"] is not None and candidate["sea_state_risk"] is not None for candidate in candidates)
+    assert [candidate["score"] for candidate in candidates] == sorted((candidate["score"] for candidate in candidates), reverse=True)
+    assert brief["selected_candidate"]["id"] in {candidate["id"] for candidate in candidates}
 
-    assert "gujarat" in payload
-    assert "candidate" in payload.lower() or "candidates" in payload.lower()
-    assert "counterfactual" in payload.lower() or "what would need to change" in payload.lower() or "scenario simulation" in payload.lower()
-    assert "risk" in payload.lower()
-    assert "evidence" in payload.lower() or "pfz" in payload.lower() or "weather" in payload.lower()
+    resolved = payload["resolved_location"]
+    assert resolved["place"] == "Gujarat"
+    assert (resolved["lat"], resolved["lon"]) == (22.7, 69.0)
+    assert brief["resolved_location"] == {"place": "Gujarat", "lat": 22.7, "lon": 69.0, "source": "explicit_query"}
+    assert all(abs(candidate["lat"] - resolved["lat"]) < 10 or abs(candidate["lon"] - resolved["lon"]) < 10 for candidate in candidates)
 
-    pfz = [card for card in state.results["marine_data_discovery"].evidence if card.type == "pfz_bulletin"]
-    weather = [card for card in state.results["weather_intelligence"].evidence if card.type == "weather_alert"]
-    ocean = [card for card in state.results["ocean_analytics"].evidence if card.type == "ocean_state"]
-    boundary = [card for card in state.results["geospatial_reasoning"].evidence if card.type == "boundary_check"]
-    assert pfz
-    assert weather or ocean
-    assert boundary
+    evidence = payload["evidence"]
+    persisted_keys = [(card["raw_ref"].get("table"), card["raw_ref"].get("id")) for card in evidence if card.get("raw_ref", {}).get("table") is not None and card.get("raw_ref", {}).get("id") is not None]
+    evidence_keys = [("record", *key) for key in persisted_keys] + [("generated", card["type"], card["source"], card["content"]) for card in evidence if card.get("raw_ref", {}).get("id") is None]
+    assert len(persisted_keys) == len(set(persisted_keys))
+    assert len(evidence) == len(evidence_keys) == len(set(evidence_keys))
+    assert all(candidate["evidence_refs"] for candidate in candidates)
+    assert all(any(ref.get("id") == candidate["id"] for ref in candidate["evidence_refs"]) for candidate in candidates)
 
-    for card in pfz + weather + ocean + boundary:
-        if card.lat is not None and card.lon is not None:
-            assert abs(card.lat - state.location[0]) < 2.0 or abs(card.lon - state.location[1]) < 2.0
+    risk = payload["risk_decomposition"]
+    assert all(key in risk for key in ("overall", "weather", "waves", "wind", "current", "tide", "boundary", "primary_driver"))
+    assert risk[risk["primary_driver"]] > 0
+    scenarios = brief["counterfactuals"]
+    assert scenarios
+    assert all(scenario["current_assessment"] and scenario["current_driver"] and scenario["changed_condition"] and scenario["resulting_assessment"] for scenario in scenarios)
 
-    synthesis = state.results["risk_assessment"]
-    assert synthesis.summary
+    assert {brief["provenance"], brief["provider_verification"]} == {"DEMO FIXTURE", "NOT LIVE VERIFIED"}
+    assert {"fishing_potential", "operational_safety", "recommendation", "boundary_status", "confidence_limitation"} <= set(brief)
+    assert {"PFZ", "WEATHER", "OCEAN", "BOUNDARY"} <= set(payload["evidence_coverage"]["available"])
+    assert "SATELLITE" in payload["evidence_coverage"]["missing_domains"]
+    assert {"User query", "Specialist agents", "Candidate comparison", "Reporting-agent synthesis"} <= set(payload["lineage"])
+    assert "boundary_reasoning" in {item["agent"] for item in payload["agent_trace"]}
+    assert payload["risk_decomposition"]["boundary"] == 0
+    trace_by_agent = {item["agent"]: item["summary"] for item in payload["agent_trace"]}
+    assert "PFZ geospatial comparison completed" not in trace_by_agent.get("boundary_reasoning", "")
+    assert "MPA status" in trace_by_agent["boundary_reasoning"]
+    assert brief["decision_rationale"]
+    assert "Gujarat Gulf of Kutch" in payload["response_text"]
+    assert "CAUTION" in payload["response_text"]
+    assert len(payload["response_text"].split()) < 100
+    assert "pfz_bulletins" not in payload["response_text"]
+    assert "raw_ref" not in payload["response_text"]
+    assert "CANDIDATES" not in payload["response_text"]
+    assert "SPECIALIST SUMMARY" not in payload["response_text"]
+    assert "EVIDENCE COVERAGE" not in payload["response_text"]
+    assert brief["selected_candidate"]["name"] in brief["decision_rationale"]
+    assert "fishing potential" in brief["decision_rationale"].lower()
+    assert "caution" in brief["decision_rationale"].lower()
+    assert brief["primary_positive"] in brief["decision_rationale"]
+    assert brief["primary_limitation"] in brief["decision_rationale"]
+    assert brief["primary_risk_driver"] == payload["risk_decomposition"]["primary_driver"]
+    assert brief["scenario_groups"]["downgrade_if"]
+    assert brief["scenario_groups"]["improve_if"]
+    assert brief["decision_balance"]["distance_km"] == brief["selected_candidate"]["distance_km"]
+
+    chennai = TestClient(app).post("/chat", json={"session_id": "strict-chennai", "message": "Near Chennai, assess the marine risks and compare nearby fishing candidates.", "lat": 15.1, "lon": 73.75}).json()
+    assert chennai["resolved_location"]["place"] == "Chennai"
+    assert (chennai["resolved_location"]["lat"], chennai["resolved_location"]["lon"]) == (13.08, 80.27)
+
+
+def test_calm_conditions_do_not_produce_saturated_risk() -> None:
+    state = run_graph("What are the calm sea conditions near Kerala?", location=(10.2, 76.1))
+    risk = __import__("agents.reporting", fromlist=["_extract_risk_profile"])._extract_risk_profile([card for result in state.results.values() for card in result.evidence])
+    assert risk["overall"] < 100
+    assert risk["overall"] < 70
 
 
 def test_demo_fixture_status_and_coverage_labels() -> None:

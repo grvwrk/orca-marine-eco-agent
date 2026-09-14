@@ -1,5 +1,13 @@
 ORCA MARINE INTELLIGENCE PROJECT
 
+Documentation note (2026-09-15)
+--------------------------------
+The canonical technical architecture is documented in ARCHITECTURE.md. The
+current local database is SQLite-first with normalized demonstration fixtures;
+provider labels do not imply live verification. The API reports DEMO FIXTURE /
+NOT LIVE VERIFIED and the frontend keeps detailed provenance in an expandable
+secondary surface. See DATA_PROVENANCE_AND_INGESTION.txt for exact data status.
+
 Overview
 This project is a marine intelligence and decision-support system for coastal and offshore operations. It combines marine data retrieval, geospatial reasoning, risk assessment, and conversational reporting into a single local application that can run without Docker in a lightweight SQLite mode.
 

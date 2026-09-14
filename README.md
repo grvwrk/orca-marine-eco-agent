@@ -1,11 +1,25 @@
 # Orca Marine Intelligence
 
+> **Current implementation note:** ORCA is SQLite-first for local execution. The verified default path uses `data/orca.sqlite3`, normalized demonstration fixtures, specialist agents, deterministic grounding calculations, and a reporting/synthesis layer that produces a concise executive answer plus structured inspection data. PostGIS and live ingestion are optional paths and must not be described as active provider verification unless configured and independently checked.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the complete component, data-flow, decision-object, API, frontend, provenance, and verification specification. See [DATA_PROVENANCE_AND_INGESTION.txt](DATA_PROVENANCE_AND_INGESTION.txt) for the data reality and ingestion limitations.
+
 Orca is an evidence-grounded marine intelligence API for the SIH26176 disaster-management brief. It combines potential fishing zone advisories, weather hazards, ocean-state forecasts, satellite readings, and maritime boundaries into traceable answers for fishing and coastal operations.
 
-The project has two modes:
+The project has two primary data modes:
 
-- **Demo mode** uses deterministic seeded evidence and runs without PostgreSQL or external APIs.
-- **Live mode** reads normalized data from PostGIS. Ingestion jobs fetch machine-readable JSON/GeoJSON feeds and load them into the same tables used by retrieval.
+- **Local SQLite mode** is the default no-Docker path. It reads `data/orca.sqlite3`, which contains normalized demonstration records and can receive historical imports.
+- **PostGIS/live mode** is optional. It reads normalized records from PostGIS or configured machine-readable feeds when the necessary database, network, endpoint, and credentials are available.
+
+The reasoning pipeline is:
+
+```text
+user query -> planner/mission intent -> specialist agents -> retrieval
+-> deterministic grounding -> shared decision -> reporting/synthesis
+-> Mission Brief and executive answer
+```
+
+Demo data may be deterministic. Final recommendation logic is not a demo-only query rule.
 
 The public portal URLs are catalogued for provenance, but portal HTML pages are not treated as data feeds. A live ingestion job needs the provider's actual API, JSON, GeoJSON, or export URL.
 
@@ -34,11 +48,12 @@ flowchart TD
 1. `POST /chat` validates the session, message, and optional latitude/longitude.
 2. The session store reuses the last known location and returns cached responses when the normalized message and location match.
 3. The planner selects specialist tasks from query terms such as `PFZ`, `weather`, `wave`, `chlorophyll`, `boundary`, `safe`, or `route`.
-4. LangGraph runs the planning, specialist, risk, and reporting nodes in sequence. Set `ORCA_USE_LANGGRAPH=0` to use the deterministic runner.
+4. LangGraph runs the planning, specialist, risk, and reporting nodes in sequence. Set `ORCA_USE_LANGGRAPH=0` to use the compatible deterministic runner; both paths use the same agent and retrieval boundaries.
 5. Each specialist calls the retrieval contract. Configured PFZ, IMD, OSF, and satellite feeds are queried first with a short in-memory cache. Empty or failed feed reads fall back to PostGIS, then to seeded data when `ORCA_DEMO_MODE=1`.
-6. The response includes text, confidence, evidence cards with source/table references, and a GeoJSON `FeatureCollection` containing the query location.
+6. The reporting layer builds one shared decision object containing the resolved location, eligible/excluded candidates, selected candidate, recommendation, confidence, risk decomposition, rationale, scenarios, coverage, provenance, and lineage.
+7. The response contains a concise executive `response_text`; technical evidence, raw references, specialist trace, map data, coverage, risk details, and lineage remain structured fields for secondary inspection.
 
-Empty live tables are valid: agents return an explicit no-data result with zero confidence instead of fabricating evidence or crashing.
+8. Empty live tables are valid: agents return an explicit no-data result with zero confidence instead of fabricating evidence or crashing.
 
 ### Specialist agents
 
@@ -70,6 +85,7 @@ Spatial queries use PostGIS geography/geometry indexes for nearest-neighbour, in
 python -m pip install -e ".[dev]"
 $env:ORCA_DEMO_MODE = "1"
 $env:ORCA_DATABASE_URL = ""
+$env:PYTHONPATH = "src;."
 python -m uvicorn orca.api.main:app --reload
 ```
 
@@ -89,6 +105,12 @@ Check runtime status at `http://127.0.0.1:8000/health`.
 
 ### Local SQLite archive
 
+The current checked-in local database contains 72 normalized demonstration
+records: 9 PFZ, 9 weather, 27 ocean, 18 satellite, and 9 boundary records.
+They exercise the real retrieval and decision pipeline but are not verified
+live provider observations. The API labels this state `DEMO FIXTURE` and
+`NOT LIVE VERIFIED`.
+
 For persistent local data without Docker, initialize and use the SQLite backend:
 
 ```powershell
@@ -96,6 +118,7 @@ $env:ORCA_USE_SQLITE = "1"
 $env:ORCA_SQLITE_PATH = "data/orca.sqlite3"
 $env:ORCA_DEMO_MODE = "0"
 $env:ORCA_DATABASE_URL = ""
+$env:PYTHONPATH = "src;."
 python -m uvicorn orca.api.main:app --reload
 ```
 
@@ -218,7 +241,19 @@ Request:
 
 `lat` and `lon` are optional. A session's last location is reused when they are omitted; otherwise the default demo location is used.
 
-Response fields include `response_text`, detected `lang`, `confidence`, `evidence`, and `map_data`. Evidence cards carry a type, content, source, validity time, and `raw_ref` pointing back to a database table or demo record.
+Response fields include:
+
+- `response_text`: concise executive answer for the Signal Interpretation panel;
+- `mission_brief`: recommendation, assessment, fishing potential, operational safety, confidence, selected candidate, eligible/excluded candidates, decision rationale, primary limitation/risk, scenarios, boundary status, and provenance;
+- `resolved_location`: authoritative place/coordinate resolution used downstream;
+- `risk_decomposition`: overall/component risk values, primary driver, semantics, and evidence-derived reasons;
+- `evidence_coverage`: available and missing domains plus confidence limitation context;
+- `evidence`: deduplicated source records with coordinates, validity times, distances, and `raw_ref` identities;
+- `agent_trace`: task-specific specialist contributions;
+- `lineage`: processing stages from user query through synthesis;
+- `map_data`: GeoJSON features for the query/evidence map.
+
+Evidence cards carry a type, content, source, validity time, and `raw_ref` pointing back to a database table or generated record. Provider names do not imply live verification; inspect `mission_brief.provenance` and `mission_brief.provider_verification`.
 
 Example:
 

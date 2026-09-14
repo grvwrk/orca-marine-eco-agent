@@ -1,5 +1,10 @@
 # ORCA Ingestion Implementation — Complete & Verified ✓
 
+> **Scope note:** “Verified” here means the adapters/parsers and local tests
+> were verified. It does not mean live provider acquisition succeeded. The
+> current SQLite records are demonstration fixtures and are labelled
+> `DEMO FIXTURE` / `NOT LIVE VERIFIED` by the API.
+
 **Status:** Ready for production  
 **Date:** 2026-09-10  
 **All modules:** Functional and tested

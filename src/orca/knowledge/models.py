@@ -53,6 +53,7 @@ class ChatResponse(BaseModel):
     lineage: list[str] = Field(default_factory=list)
     risk_decomposition: dict[str, Any] = Field(default_factory=dict)
     agent_consensus: list[dict[str, Any]] = Field(default_factory=list)
+    resolved_location: dict[str, Any] = Field(default_factory=dict)
 
 
 class ConversationTurn(BaseModel):

@@ -1,5 +1,14 @@
 # Ingestion adapters
 
+> **Current status:** The verified local product path is SQLite-first and uses
+> `data/orca.sqlite3`. The checked-in database contains normalized
+> demonstration fixtures, not guaranteed live provider downloads. The adapter
+> modules below are optional ingestion paths; an implemented adapter is not
+> evidence that a provider request succeeded. See the root
+> [ARCHITECTURE.md](../ARCHITECTURE.md) and
+> [DATA_PROVENANCE_AND_INGESTION.txt](../DATA_PROVENANCE_AND_INGESTION.txt)
+> before making live-data claims.
+
 The demo runs with seeded retrieval data. Production ingestion jobs should normalize each source into the tables in `db/schema.sql`, preserving the upstream URL or bulletin identifier in the row metadata. These adapters are intentionally separate from orchestration so a failed feed can produce an explicit zero-confidence result instead of stopping the API.
 
 ## Overview

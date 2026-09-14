@@ -4,6 +4,28 @@ ORCA DATA PROVENANCE, SEEDING, HISTORICAL IMPORT, AND INGESTION STATUS
 Report date: 2026-09-14
 Project: ORCA Marine Intelligence
 
+CURRENT VERIFIED STATE (2026-09-15)
+------------------------------------
+
+The current workspace database has 72 normalized demonstration records:
+
+   pfz_bulletins          9
+   weather_alerts         9
+   ocean_state_forecast  27
+   satellite_readings    18
+   boundary_geometries    9
+
+This count supersedes older paragraphs in this historical report that describe
+the earlier two-record-per-table fixture set. The current records are still
+synthetic/normalized demonstration fixtures, not verified live provider
+observations. The API reports `DEMO FIXTURE` and `NOT LIVE VERIFIED`.
+
+The current flagship decision path is also stricter than the early report:
+candidate comparison applies the 200 km useful-distance rule, distant records
+are excluded from scoring, MPA absence is reported as UNKNOWN, confidence is
+reduced for missing domains, and the primary response is a concise executive
+answer with technical details exposed separately.
+
 This document explains exactly where the data comes from, how it enters the
 system, what is currently in the local SQLite database, how much of it is real,
 and which ingestion paths are incomplete, unavailable, or fallback-only.

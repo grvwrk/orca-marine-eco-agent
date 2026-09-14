@@ -14,6 +14,14 @@ PLACE_COORDS: dict[str, tuple[float, float]] = {
 }
 
 
+def resolved_location_details(query: str, location: tuple[float, float]) -> dict[str, Any]:
+    normalized = " ".join(re.sub(r"[’']", " ", query.lower()).split())
+    for place_name, coords in sorted(PLACE_COORDS.items(), key=lambda item: len(item[0]), reverse=True):
+        if re.search(rf"\b{re.escape(place_name)}\b", normalized):
+            return {"place": place_name.title(), "lat": coords[0], "lon": coords[1], "source": "explicit_query"}
+    return {"place": "User location", "lat": location[0], "lon": location[1], "source": "request_or_session"}
+
+
 def resolve_location(query: str, fallback: tuple[float, float] = (15.10, 73.75)) -> tuple[float, float]:
     normalized = " ".join(re.sub(r"[’']", " ", query.lower()).split())
     for place_name, coords in sorted(PLACE_COORDS.items(), key=lambda item: len(item[0]), reverse=True):
@@ -36,10 +44,11 @@ class OrcaState:
 
 def plan(query: str) -> list[AgentTask]:
     text = query.lower()
+    comparison = any(term in text for term in ("compare", "candidates", "best balance", "top candidates"))
     tasks: list[AgentTask] = []
     if any(term in text for term in ("fishing zone", "fishing", "fish", "pfz")):
-        tasks.append(AgentTask(task_id="marine-1", agent="marine_data_discovery", params={"need": "pfz"}))
-        tasks.append(AgentTask(task_id="geo-1", agent="geospatial_reasoning", params={"mode": "nearest_pfz"}))
+        tasks.append(AgentTask(task_id="marine-1", agent="marine_data_discovery", params={"need": "pfz", "comparison": comparison}))
+        tasks.append(AgentTask(task_id="geo-1", agent="geospatial_reasoning", params={"mode": "nearest_pfz", "comparison": comparison}))
     if any(word in text for word in ("weather", "alert", "lightning", "cyclone", "safe", "hazard", "fishing", "fish")):
         tasks.append(AgentTask(task_id="weather-1", agent="weather_intelligence"))
     if any(word in text for word in ("tide", "sea condition", "wave", "current", "safe", "fishing", "fish")):

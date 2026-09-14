@@ -1,5 +1,13 @@
 # ORCA Data Ingestion Implementation Report
 
+> **Current status correction (2026-09-15):** This report documents adapter
+> implementation and parser behavior. It does not mean the current local
+> SQLite database was populated from live provider downloads. The verified
+> local database contains normalized demonstration fixtures and the API labels
+> them `DEMO FIXTURE` / `NOT LIVE VERIFIED`. For the current end-to-end
+> architecture and decision contract, read [ARCHITECTURE.md](ARCHITECTURE.md)
+> and [DATA_PROVENANCE_AND_INGESTION.txt](DATA_PROVENANCE_AND_INGESTION.txt).
+
 **Date:** 2026-09-10  
 **Status:** Complete and tested ✓
 

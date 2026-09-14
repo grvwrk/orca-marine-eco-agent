@@ -7,7 +7,7 @@ from orca.knowledge.models import ChatRequest, ChatResponse, EvidenceCard
 from orca.knowledge.models import ConversationTurn
 from orca.config import settings
 from orca.knowledge.database import DatabaseUnavailable, PostGISDatabase, SQLiteDatabase
-from orca.orchestration.graph import resolve_location, run_graph
+from orca.orchestration.graph import resolve_location, resolved_location_details, run_graph
 from agents.reporting import synthesize
 from orca.api.session_store import SessionStore
 
@@ -59,20 +59,37 @@ def chat(request: ChatRequest) -> ChatResponse:
             seen_evidence.add(key)
             evidence.append(card)
     synthesis = synthesize(state.results, request.message, location)
+    synthesis["mission_brief"]["resolved_location"] = resolved_location_details(request.message, location)
     response = str(synthesis["response_text"])
     confidence = float(synthesis["mission_brief"]["confidence"])
     lang = _language_code(request.message)
     trace = []
+    seen_trace: set[tuple[str, str]] = set()
     for task in state.tasks:
         result = state.results.get(task.agent)
+        summary = result.summary if result is not None else "Awaiting specialist result"
+        if task.agent == "geospatial_reasoning" and task.params.get("mode") == "boundary_check":
+            trace_agent = "boundary_reasoning"
+            boundary_cards = [card for card in (result.evidence if result is not None else []) if card.type == "boundary_check"]
+            summary = "MPA status remains unknown because usable MPA evidence is unavailable." if any("no mpa boundary data" in card.content.lower() for card in boundary_cards) else "Boundary evidence retrieved for restriction assessment."
+        elif task.agent == "geospatial_reasoning":
+            trace_agent = "pfz_geospatial_reasoning"
+            pfz_cards = [card for card in (result.evidence if result is not None else []) if card.type == "pfz_bulletin"]
+            summary = f"Candidate is within the useful range at {pfz_cards[0].distance_km:.1f} km." if pfz_cards and pfz_cards[0].distance_km is not None else "PFZ geospatial comparison completed."
+        else:
+            trace_agent = task.agent
+        trace_key = (trace_agent, summary)
+        if trace_key in seen_trace:
+            continue
+        seen_trace.add(trace_key)
         trace.append({
-            "agent": task.agent,
+            "agent": trace_agent,
             "status": "done" if result is not None else "pending",
-            "summary": result.summary if result is not None else "Awaiting specialist result",
+            "summary": summary,
             "confidence": result.confidence if result is not None else 0.0,
         })
     data_mode = "sqlite" if settings.use_sqlite else "demo" if not settings.database_url else "live"
-    output = ChatResponse(session_id=request.session_id, response_text=response, lang=lang, map_data=state.map_data, evidence=evidence, confidence=confidence, mode=data_mode, agent_trace=trace, mission_brief=synthesis["mission_brief"], evidence_coverage=synthesis["evidence_coverage"], lineage=synthesis["lineage"], risk_decomposition=synthesis["risk_decomposition"], agent_consensus=synthesis["agent_consensus"])
+    output = ChatResponse(session_id=request.session_id, response_text=response, lang=lang, map_data=state.map_data, evidence=evidence, confidence=confidence, mode=data_mode, agent_trace=trace, mission_brief=synthesis["mission_brief"], evidence_coverage=synthesis["evidence_coverage"], lineage=synthesis["lineage"], risk_decomposition=synthesis["risk_decomposition"], agent_consensus=synthesis["agent_consensus"], resolved_location=resolved_location_details(request.message, location))
     session.last_location = location
     session.history.extend([ConversationTurn(role="user", content=request.message, lang=lang), ConversationTurn(role="assistant", content=response, lang=lang)])
     sessions.save(session)
