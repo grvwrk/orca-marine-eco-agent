@@ -123,3 +123,58 @@ def test_same_agent_tasks_merge_evidence() -> None:
     assert len(geospatial.evidence) >= 2
     assert any(card.type == "pfz_bulletin" for card in geospatial.evidence)
     assert any(card.type == "boundary_check" for card in geospatial.evidence)
+
+
+def test_explicit_place_name_resolution_for_key_regions() -> None:
+    from orca.orchestration.graph import resolve_location
+
+    expected = {
+        "Gujarat": (22.7, 69.0),
+        "Chennai": (13.08, 80.27),
+        "Goa": (15.1, 73.75),
+        "Kerala": (10.2, 76.1),
+    }
+    for name, target in expected.items():
+        resolved = resolve_location(f"Near {name} I am considering fishing tomorrow morning.")
+        assert abs(resolved[0] - target[0]) < 0.75
+        assert abs(resolved[1] - target[1]) < 0.75
+
+
+def test_signature_query_contract_and_counterfactuals() -> None:
+    query = "Near Gujarat, I’m considering fishing tomorrow morning. Find the best nearby area by balancing fishing potential, weather risk, sea state, and protected-area restrictions. Compare the top candidates, explain your recommendation, show what evidence supports it, and tell me what would need to change for your recommendation to change."
+    state = run_graph(query, location=(15.1, 73.75))
+    payload = state.response_text.lower()
+
+    assert "gujarat" in payload
+    assert "candidate" in payload.lower() or "candidates" in payload.lower()
+    assert "counterfactual" in payload.lower() or "what would need to change" in payload.lower() or "scenario simulation" in payload.lower()
+    assert "risk" in payload.lower()
+    assert "evidence" in payload.lower() or "pfz" in payload.lower() or "weather" in payload.lower()
+
+    pfz = [card for card in state.results["marine_data_discovery"].evidence if card.type == "pfz_bulletin"]
+    weather = [card for card in state.results["weather_intelligence"].evidence if card.type == "weather_alert"]
+    ocean = [card for card in state.results["ocean_analytics"].evidence if card.type == "ocean_state"]
+    boundary = [card for card in state.results["geospatial_reasoning"].evidence if card.type == "boundary_check"]
+    assert pfz
+    assert weather or ocean
+    assert boundary
+
+    for card in pfz + weather + ocean + boundary:
+        if card.lat is not None and card.lon is not None:
+            assert abs(card.lat - state.location[0]) < 2.0 or abs(card.lon - state.location[1]) < 2.0
+
+    synthesis = state.results["risk_assessment"]
+    assert synthesis.summary
+
+
+def test_demo_fixture_status_and_coverage_labels() -> None:
+    query = "Near Gujarat, I’m considering fishing tomorrow morning. Find the best nearby area by balancing fishing potential, weather risk, sea state, and protected-area restrictions. Compare the top candidates, explain your recommendation, show what evidence supports it, and tell me what would need to change for your recommendation to change."
+    state = run_graph(query, location=(15.1, 73.75))
+    assert state.response_text
+    assert "demo fixture" in state.response_text.lower() or "not live verified" in state.response_text.lower()
+
+    coverage = state.response_text.lower()
+    assert "pfz" in coverage
+    assert "weather" in coverage
+    assert "ocean" in coverage
+    assert "boundary" in coverage

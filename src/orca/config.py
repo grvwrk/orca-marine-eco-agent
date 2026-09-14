@@ -5,8 +5,8 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class Settings:
     database_url: str | None = os.getenv("ORCA_DATABASE_URL")
-    demo_mode: bool = os.getenv("ORCA_DEMO_MODE", "1") == "1"
-    use_sqlite: bool = os.getenv("ORCA_USE_SQLITE", "0") == "1"
+    demo_mode: bool = os.getenv("ORCA_DEMO_MODE", "0") == "1"
+    use_sqlite: bool = os.getenv("ORCA_USE_SQLITE", "1") == "1"
     sqlite_path: str = os.getenv("ORCA_SQLITE_PATH", "data/orca.sqlite3")
     request_timeout_seconds: float = float(os.getenv("ORCA_REQUEST_TIMEOUT", "15"))
     ca_bundle: str | bool = os.getenv("ORCA_CA_BUNDLE") or True

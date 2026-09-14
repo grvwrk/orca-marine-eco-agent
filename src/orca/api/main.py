@@ -7,7 +7,7 @@ from orca.knowledge.models import ChatRequest, ChatResponse, EvidenceCard
 from orca.knowledge.models import ConversationTurn
 from orca.config import settings
 from orca.knowledge.database import DatabaseUnavailable, PostGISDatabase, SQLiteDatabase
-from orca.orchestration.graph import run_graph
+from orca.orchestration.graph import resolve_location, run_graph
 from agents.reporting import synthesize
 from orca.api.session_store import SessionStore
 
@@ -37,7 +37,8 @@ def health() -> dict[str, str]:
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
     session = sessions.get(request.session_id)
-    location = (request.lat, request.lon) if request.lat is not None and request.lon is not None else session.last_location or (15.10, 73.75)
+    fallback_location = (request.lat, request.lon) if request.lat is not None and request.lon is not None else session.last_location or (15.10, 73.75)
+    location = resolve_location(request.message, fallback=fallback_location)
     normalized = " ".join(request.message.lower().split())
     cache_key = (normalized, location)
     cached = sessions.cached(cache_key)

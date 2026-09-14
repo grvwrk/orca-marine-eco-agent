@@ -7,7 +7,7 @@ from langgraph.graph import END, START, StateGraph
 from agents import geospatial_reasoning, marine_data_discovery, ocean_analytics, reporting, risk_assessment, weather_intelligence
 from orca.knowledge.models import AgentTask
 from orca.orchestration.state import OrcaState
-from orca.orchestration.graph import plan
+from orca.orchestration.graph import plan, resolve_location
 
 
 def _agent_node(agent_name: str, runner: Any):
@@ -59,5 +59,6 @@ def build_graph():
 
 
 def run_langgraph(query: str, location: tuple[float, float] = (15.10, 73.75)) -> dict:
-    initial: OrcaState = {"session_id": "local", "raw_query": query, "lang": "en", "query_en": query, "tasks": [], "results": {}, "verdict": None, "map_data": None, "response_text": None, "final_response": None, "last_location": location}
+    resolved_location = resolve_location(query, fallback=location)
+    initial: OrcaState = {"session_id": "local", "raw_query": query, "lang": "en", "query_en": query, "tasks": [], "results": {}, "verdict": None, "map_data": None, "response_text": None, "final_response": None, "last_location": resolved_location}
     return build_graph().invoke(initial)
